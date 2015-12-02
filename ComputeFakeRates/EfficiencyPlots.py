@@ -150,3 +150,63 @@ class EfficiencyPlots:
                 for graph in effPlot.efficiencyGraphs:
                     graph.Write()
 
+
+class EfficiencyInBinsPlots:
+    def __init__(self):
+        self.name = "efficiencies"
+        self.divideOption = "cp" ##  Default: Clopper-Pearson interval 
+        self.plotDir = "plots"
+        self.inputFileName = None
+        self.histoBaseName = "hTagAndProbe_TurnOn"
+        self.selectionLevels = []
+        self.referenceLevels = []
+        self.individualNames = []
+        self.variables = ["probeele_eta"]
+        self.variableNames = {}
+        self.variableBins = {}
+        self.minEfficiencies = {}
+        self.outputFile = None
+        self.plots = []
+        self.plotInfos = []
+
+    def addVariable(self, var):
+        if not var in self.variables:
+            self.variables.append(var)
+
+    def plot(self, minEff=0.95, maxEff=1.01):
+        inputFile = ROOT.TFile.Open(self.inputFileName)
+        for var in self.variables:
+            for plotInfo in self.plotInfos:
+                plotInfo.xTitle = self.variableNames[var]
+                #plotInfo.yTitle = "efficiency"
+            for selectionLevel,referenceLevel,individualName in zip(self.selectionLevels, self.referenceLevels, self.individualNames):
+                effPlot = EfficiencyPlot()
+                effPlot.name = self.name+"__"+individualName+"__"+var
+                effPlot.plotDir = self.plotDir+"/"+self.name+"/"+individualName
+                for bin,plotInfo in zip(self.variableBins[var],self.plotInfos):
+                    fvar = "_"+var
+                    fselectionLevel = "_"+selectionLevel
+                    fbin = str(bin)
+                    freferenceLevel = "_"+referenceLevel if referenceLevel!="" else ""
+                    passHistoName = self.histoBaseName+fselectionLevel+fvar+fbin
+                    totalHistoName = self.histoBaseName+freferenceLevel+fvar+fbin
+                    passHisto = inputFile.Get(passHistoName)
+                    if not passHisto:
+                        raise StandardError("Cannot find histo "+passHistoName+" in file "+inputFile.GetName())
+                    passHisto.__class__ = ROOT.TH1F
+                    passHisto.SetDirectory(0)
+                    totalHisto = inputFile.Get(totalHistoName)
+                    if not totalHisto:
+                        raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
+                    totalHisto.__class__ = ROOT.TH1F
+                    totalHisto.SetDirectory(0)
+                    #
+                    effPlot.efficiency(passHisto, totalHisto, self.divideOption, plotInfo)
+                    effPlot.efficiencyGraphs[-1].SetName(self.name+fselectionLevel+freferenceLevel+fvar+fbin)
+                effPlot.plot(minEff,maxEff)
+                self.plots.append(effPlot)
+                ## Store efficiencies in output ROOT file
+                self.outputFile.cd()
+                for graph in effPlot.efficiencyGraphs:
+                    graph.Write()
+        inputFile.Close() 
