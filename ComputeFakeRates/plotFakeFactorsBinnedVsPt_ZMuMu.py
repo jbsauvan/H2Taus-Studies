@@ -3,7 +3,7 @@ import os
 from EfficiencyPlots import EfficiencyInBinsPlots, PlotInfo
 
 
-inputFileName = "../../Histos/StudyFakeRate/ZMuMu/v_5_2015-12-01/fakerates_ZMuMu.root"
+inputFileName = "../../Histos/StudyFakeRate/ZMuMu/v_6_2015-12-02/fakerates_ZMuMu.root"
 plotDir = "plots/"
 name = "FakeFactorsInBins_ZMuMu"
 
@@ -25,18 +25,18 @@ names.append("VsNoIso")
 names2 = []
 names2.append("VsInvertIso")
 
-variables = ["tau_pt_vs_eta_", "tau_pt_vs_decayMode_", "tau_pt_vs_MergedPdgId_"]
+variables = ["tau_pt_vs_eta_", "tau_pt_vs_decayMode_", "tau_pt_vs_mergedPdgId_"]
 variableNames = {}
 variableNames["tau_pt_vs_eta_"] = "p_{T}^{#tau} [GeV]"
 variableNames["tau_pt_vs_decayMode_"] = "p_{T}^{#tau} [GeV]"
 variableNames["tau_pt_vs_pdgId_"] = "p_{T}^{#tau} [GeV]"
-variableNames["tau_pt_vs_MergedPdgId_"] = "p_{T}^{#tau} [GeV]"
+variableNames["tau_pt_vs_mergedPdgId_"] = "p_{T}^{#tau} [GeV]"
 
 variableBins = {}
 variableBins["tau_pt_vs_eta_"] = [0,1,2]
 variableBins["tau_pt_vs_decayMode_"] = [0,1,2]
 #variableBins["tau_pt_vs_pdgId_"] = [6,7,8,9,10,11]
-variableBins["tau_pt_vs_MergedPdgId_"] = [0,2,3,4,5,6]
+variableBins["tau_pt_vs_mergedPdgId_"] = [0,2,3,4,5,6]
 
 
 

@@ -12,6 +12,9 @@ list_weights = [
     "Weight_VsEta",
     "Weight_VsDecay",
     "Weight_VsPdgId",
+    "Weight_VsPtEta",
+    "Weight_VsPtDecay",
+    "Weight_VsPtPdgId",
 ]
 
 list_backgrounds = [

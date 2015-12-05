@@ -4,7 +4,7 @@ from Efficiency2DPlots import Efficiency2DPlots, PlotInfo
 
 
 
-inputFileName = "../../Histos/StudyFakeRate/ZMuMu/v_5_2015-12-01/fakerates_ZMuMu.root"
+inputFileName = "../../Histos/StudyFakeRate/ZMuMu/v_6_2015-12-02/fakerates_ZMuMu.root"
 plotDir = "plots/"
 name = "2DFakeFactors_ZMuMu"
 
@@ -23,11 +23,12 @@ names.append("VsNoIso")
 names2 = []
 names2.append("VsInvertIso")
 
-variables = ["tau_pt_vs_eta", "tau_pt_vs_decayMode", "tau_pt_vs_pdgId"]
+variables = ["tau_pt_vs_eta", "tau_pt_vs_decayMode", "tau_pt_vs_pdgId", "tau_pt_vs_mergedPdgId"]
 variableNames = {}
 variableNames["tau_pt_vs_eta"] = ["p_{T}^{#tau} [GeV]", "#eta^{#tau}"]
 variableNames["tau_pt_vs_decayMode"] = ["p_{T}^{#tau} [GeV]", "decay mode"]
 variableNames["tau_pt_vs_pdgId"] = ["p_{T}^{#tau} [GeV]", "pdg ID#times sign-flip"]
+variableNames["tau_pt_vs_mergedPdgId"] = ["p_{T}^{#tau} [GeV]", "pdg ID#times sign-flip"]
 
 
 
