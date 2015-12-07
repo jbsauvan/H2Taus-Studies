@@ -2,28 +2,49 @@ import ROOT
 import os
 from EfficiencyPlots import EfficiencyPlots, PlotInfo
 
+publish = True
+publicationDir = ""
+if publish:
+    if os.path.exists("/afs/cern.ch/user/j/jsauvan/www/"):
+        publicationDir = "/afs/cern.ch/user/j/jsauvan/www/H2Taus/FakeRate/FakeFactors/"
+    elif os.path.exists("/home/sauvan/lxplus/www/"):
+        publicationDir = "/home/sauvan/lxplus/www/H2Taus/FakeRate/FakeFactors/"
+    else:
+        publish = False
 
 
-inputFileName = "../../Histos/StudyFakeRate/ZMuMu/v_4_2015-11-25/fakerates_ZMuMu.root"
+inputFileName = "../../Histos/StudyFakeRate/ZMuMu/v_7_2015-12-05/fakerates_ZMuMu.root"
 plotDir = "plots/"
-name = "FakeFactors_ZMuMu"
+name = "FakeFactors_ZMuMu_1D"
 systems = []
 systems.append("")
 
 selectionLevels = []
-selectionLevels.append(("StandardIso",))
+selectionLevels.append(("IsoRaw_1_5",))
+selectionLevels.append(("Iso_Medium",))
+
+selectionLevels2 = []
+selectionLevels2.append(("IsoRaw_1_5",))
+selectionLevels2.append(("IsoRaw_1_5",))
+selectionLevels2.append(("Iso_Medium",))
 
 referenceLevels = []
 referenceLevels.append(("NoIso",))
+referenceLevels.append(("NoIso",))
 
 referenceLevels2 = []
-referenceLevels2.append(("InvertIso",))
+referenceLevels2.append(("InvertIsoRaw_1_5",))
+referenceLevels2.append(("InvertIsoRaw_3",))
+referenceLevels2.append(("InvertIso_Medium",))
 
 names = []
-names.append("VsNoIso")
+names.append("IsoRaw_1_5_Vs_NoIso")
+names.append("Iso_Medium_VsNoIso")
 
 names2 = []
-names2.append("VsInvertIso")
+names2.append("IsoRaw_1_5_Vs_InvertIsoRaw_1_5")
+names2.append("IsoRaw_1_5_Vs_InvertIsoRaw_3")
+names2.append("Iso_Medium_Vs_InvertIso_Medium")
 
 variables = ["tau_pt", "tau_eta", "tau_decayMode", "tau_pdgId", "nevents", "nvertices", "rho"]
 variableNames = {}
@@ -49,6 +70,7 @@ efficiencyPlots = []
 
 effPlots = EfficiencyPlots()
 effPlots.name = name
+effPlots.publicationDir = publicationDir
 effPlots.histoBaseName = "hFakeRate"
 effPlots.inputFileNames = [inputFileName]
 effPlots.systems = systems
@@ -64,10 +86,11 @@ efficiencyPlots.append(effPlots)
 
 effPlots = EfficiencyPlots()
 effPlots.name = name
+effPlots.publicationDir = publicationDir
 effPlots.histoBaseName = "hFakeRate"
 effPlots.inputFileNames = [inputFileName]
 effPlots.systems = systems
-effPlots.selectionLevels = selectionLevels
+effPlots.selectionLevels = selectionLevels2
 effPlots.plotInfos = plotInfos
 effPlots.referenceLevels = referenceLevels2 
 effPlots.individualNames = names2

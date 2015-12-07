@@ -48,6 +48,7 @@ class EfficiencyPlot:
     def __init__(self):
         self.name = "efficiency"
         self.plotDir = "plots/"
+        self.publicationDir = ""
         self.passHistos = []
         self.totalHistos = []
         self.efficiencyGraphs = []
@@ -68,6 +69,8 @@ class EfficiencyPlot:
         setPlotStyle()
         if not os.path.exists(self.plotDir):
             os.makedirs(self.plotDir)
+        if self.publicationDir!="" and not os.path.exists(self.publicationDir):
+            os.makedirs(self.publicationDir)
         np = self.efficiencyGraphs[-1].GetN()
         xMin = self.totalHistos[-1].GetXaxis().GetBinLowEdge(1)
         xMax = self.totalHistos[-1].GetXaxis().GetBinUpEdge(self.totalHistos[-1].GetNbinsX())
@@ -85,6 +88,11 @@ class EfficiencyPlot:
         self.canvas.Print(self.plotDir+"/"+self.name+".png")
         self.canvas.Print(self.plotDir+"/"+self.name+".pdf")
         self.canvas.Print(self.plotDir+"/"+self.name+".C")
+        if self.publicationDir!="":
+            self.canvas.Print(self.publicationDir+"/"+self.name+".eps")
+            self.canvas.Print(self.publicationDir+"/"+self.name+".png")
+            self.canvas.Print(self.publicationDir+"/"+self.name+".pdf")
+            self.canvas.Print(self.publicationDir+"/"+self.name+".C")
 
 
 
@@ -94,6 +102,7 @@ class EfficiencyPlots:
         self.name = "efficiencies"
         self.divideOption = "cp" ##  Default: Clopper-Pearson interval 
         self.plotDir = "plots"
+        self.publicationDir = ""
         self.inputFileNames = []
         self.histoBaseName = "hTagAndProbe_TurnOn"
         self.systems = []
@@ -121,6 +130,7 @@ class EfficiencyPlots:
                 effPlot = EfficiencyPlot()
                 effPlot.name = self.name+"__"+individualName+"__"+var
                 effPlot.plotDir = self.plotDir+"/"+self.name+"/"+individualName
+                if self.publicationDir!="": effPlot.publicationDir = self.publicationDir+"/"+self.name+"/"+individualName
                 for inputFileName,system,selectionLevel,referenceLevel,plotInfo in zip(self.inputFileNames,self.systems,selectionLevels,referenceLevels,self.plotInfos):
                     inputFile = ROOT.TFile.Open(inputFileName)
                     fvar = "_"+var
