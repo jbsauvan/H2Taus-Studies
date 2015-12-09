@@ -5,6 +5,12 @@ from Data import CompatibilityData
 
 inputdir = "../../CMSSW/CMSSW_7_4_15/src/CMGTools/H2TauTau/plotting/mt/fakeplots/"
 
+minChi2 = 0.8
+maxChi2 = 66.
+
+minChi2Norm = 0.07
+maxChi2Norm = 710.
+
 list_weights_IsoRaw_1_5 = [
     "Weight_IsoRaw_1_5_Inclusive",
     "Weight_IsoRaw_1_5_VsNVtx",
@@ -141,7 +147,7 @@ def plotMaps(name, inputdir, list_weights, list_backgrounds):
     canvas.append(ROOT.TCanvas("canvas_pvalue_{}".format(name), "canvas", 700, 700))
     canvas[-1].SetLogz()
     pvaluemap.SetAxisRange(1.e-30, 1., "Z")
-    pvaluemap.Draw("col text")
+    pvaluemap.Draw("colz text")
     canvas[-1].Print("plots/pvaluemap_{}.png".format(name))
     canvas[-1].Print("plots/pvaluemap_{}.eps".format(name))
     canvas[-1].Print("plots/pvaluemap_{}.pdf".format(name))
@@ -149,7 +155,8 @@ def plotMaps(name, inputdir, list_weights, list_backgrounds):
     chi2map.SetContour(99)
     canvas.append(ROOT.TCanvas("canvas_chi2_{}".format(name), "canvas", 700, 700))
     canvas[-1].SetLogz()
-    chi2map.Draw("col text")
+    chi2map.SetAxisRange(minChi2, maxChi2, "Z")
+    chi2map.Draw("colz text")
     canvas[-1].Print("plots/chi2map_{}.png".format(name))
     canvas[-1].Print("plots/chi2map_{}.eps".format(name))
     canvas[-1].Print("plots/chi2map_{}.pdf".format(name))
@@ -157,7 +164,8 @@ def plotMaps(name, inputdir, list_weights, list_backgrounds):
     chi2normmap.SetContour(99)
     canvas.append(ROOT.TCanvas("canvas_chi2norm_{}".format(name), "canvas", 700, 700))
     canvas[-1].SetLogz()
-    chi2normmap.Draw("col text")
+    chi2normmap.SetAxisRange(minChi2Norm, maxChi2Norm, "Z")
+    chi2normmap.Draw("colz text")
     canvas[-1].Print("plots/chi2normmap_{}.png".format(name))
     canvas[-1].Print("plots/chi2normmap_{}.eps".format(name))
     canvas[-1].Print("plots/chi2normmap_{}.pdf".format(name))

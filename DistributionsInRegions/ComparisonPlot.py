@@ -42,7 +42,7 @@ class ComparisonPlot:
         self.name = "plot"
         self.plotDir = "plots/"
         self.logy = False
-        self.legendPosition = [0.7, 0.7, 0.9, 0.9]
+        self.legendPosition = [0.5, 0.7, 0.95, 0.9]
         self.histos = []
 
 

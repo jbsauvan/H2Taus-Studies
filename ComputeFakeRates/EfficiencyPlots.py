@@ -40,6 +40,7 @@ class PlotInfo:
         self.markerStyle = 20
         self.markerColor = ROOT.kBlack
         self.lineColor = ROOT.kBlack
+        self.legend = ""
         self.xTitle = ""
         self.yTitle = ""
 
@@ -53,6 +54,8 @@ class EfficiencyPlot:
         self.totalHistos = []
         self.efficiencyGraphs = []
         self.canvas = None
+        self.drawLegend = False
+        self.legendPosition = [0.6, 0.7, 0.95, 0.9]
         self.plotInfos = []
 
     def efficiency(self, pas, total, option, plotInfo):
@@ -82,8 +85,13 @@ class EfficiencyPlot:
         hDummy.SetYTitle(self.plotInfos[-1].yTitle)
         hDummy.SetAxisRange(minEff, maxEff, "Y")
         hDummy.Draw()
-        for eff in self.efficiencyGraphs:
+        legend = ROOT.TLegend(self.legendPosition[0],self.legendPosition[1],self.legendPosition[2],self.legendPosition[3])
+        legend.SetFillColor(0)
+        legend.SetLineColor(0)
+        for eff,plotInfo in zip(self.efficiencyGraphs, self.plotInfos):
             eff.Draw("p same")
+            legend.AddEntry(eff, plotInfo.legend, "p")
+        if self.drawLegend: legend.Draw()
         self.canvas.Print(self.plotDir+"/"+self.name+".eps")
         self.canvas.Print(self.plotDir+"/"+self.name+".png")
         self.canvas.Print(self.plotDir+"/"+self.name+".pdf")
@@ -173,6 +181,7 @@ class EfficiencyInBinsPlots:
         self.individualNames = []
         self.variables = ["probeele_eta"]
         self.variableNames = {}
+        self.variableLegends = {}
         self.variableBins = {}
         self.minEfficiencies = {}
         self.outputFile = None
@@ -191,9 +200,11 @@ class EfficiencyInBinsPlots:
                 #plotInfo.yTitle = "efficiency"
             for selectionLevel,referenceLevel,individualName in zip(self.selectionLevels, self.referenceLevels, self.individualNames):
                 effPlot = EfficiencyPlot()
+                effPlot.drawLegend = True
                 effPlot.name = self.name+"__"+individualName+"__"+var
                 effPlot.plotDir = self.plotDir+"/"+self.name+"/"+individualName
-                for bin,plotInfo in zip(self.variableBins[var],self.plotInfos):
+                for bin,plotInfo,legend in zip(self.variableBins[var],self.plotInfos,self.variableLegends[var]):
+                    plotInfo.legend = legend
                     fvar = "_"+var
                     fselectionLevel = "_"+selectionLevel
                     fbin = str(bin)

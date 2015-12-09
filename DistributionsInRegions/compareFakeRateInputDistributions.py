@@ -21,14 +21,14 @@ variables = {
     "tau_pt":{"Title":"p_{T}^{#tau} [GeV]", "Log":True, "VariableWidth":True},
     "tau_eta":{"Title":"#eta^{#tau}", "Log":False, "VariableWidth":False},
     "tau_decayMode":{"Title":"tau decay mode", "Log":False, "VariableWidth":False},
-    "tau_pdgId":{"Title":"pdg ID #times sign-flip", "Log":False, "VariableWidth":False},
+    "tau_pdgId":{"Title":"|pdg ID| #times sign-flip", "Log":False, "VariableWidth":False},
 }
 
 legendPositions = {
-    "tau_pt":[0.7, 0.7, 0.9, 0.9],
-    "tau_eta":[0.75, 0.8, 0.95, 0.93],
-    "tau_decayMode":[0.2, 0.7, 0.4, 0.9],
-    "tau_pdgId":[0.2, 0.7, 0.4, 0.9],
+    "tau_pt":[0.6, 0.7, 0.95, 0.9],
+    "tau_eta":[0.35, 0.2, 0.7, 0.3],
+    "tau_decayMode":[0.2, 0.7, 0.55, 0.9],
+    "tau_pdgId":[0.2, 0.7, 0.55, 0.9],
 }
 
 
