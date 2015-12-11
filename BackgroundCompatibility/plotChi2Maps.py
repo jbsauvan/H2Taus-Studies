@@ -105,7 +105,7 @@ def setPlotStyle():
     ROOT.gStyle.SetPaintTextFormat("3.2f")
     ROOT.gROOT.ForceStyle();
 
-def plotMaps(name, inputdir, list_weights, list_backgrounds):
+def plotMaps(name, inputdir, global_selection, list_weights, list_backgrounds):
     ## create histogram
     nweights = len(list_weights)
     nbackgrounds = len(list_backgrounds)
@@ -129,8 +129,10 @@ def plotMaps(name, inputdir, list_weights, list_backgrounds):
         dat.fillFromDict(data[key])
         backgrounds = tuple(dat.backgrounds)
         weight = dat.weight_name
+        selection = dat.global_selection
         if not backgrounds in list_backgrounds: continue
         if not weight in list_weights: continue
+        if global_selection!=selection: continue
         binx = chi2map.GetXaxis().FindBin(dict_weights[weight])
         biny = chi2map.GetYaxis().FindBin(dict_backgrounds[backgrounds])
         print dat.chi2[0]
@@ -177,6 +179,16 @@ def plotMaps(name, inputdir, list_weights, list_backgrounds):
     data.close()
 
 setPlotStyle()
-plotMaps("IsoRaw_1_5",inputdir, list_weights_IsoRaw_1_5, list_backgrounds)
-plotMaps("Iso_Medium",inputdir, list_weights_Iso_Medium, list_backgrounds)
+minChi2 = 0.8
+maxChi2 = 66.
+minChi2Norm = 0.07
+maxChi2Norm = 710.
+plotMaps("IsoRaw_1_5",inputdir, "", list_weights_IsoRaw_1_5, list_backgrounds)
+plotMaps("Iso_Medium",inputdir, "", list_weights_Iso_Medium, list_backgrounds)
+minChi2 = 0.8
+maxChi2 = 18.
+minChi2Norm = 0.07
+maxChi2Norm = 190.
+plotMaps("MT40_IsoRaw_1_5",inputdir, "MT40_", list_weights_IsoRaw_1_5, list_backgrounds)
+plotMaps("MT40_Iso_Medium",inputdir, "MT40_", list_weights_Iso_Medium, list_backgrounds)
 
