@@ -3,7 +3,7 @@ import shelve
 from Data import CompatibilityData
 
 
-inputdir = "../../CMSSW/CMSSW_7_4_15/src/CMGTools/H2TauTau/plotting/mt/fakeplots/"
+inputdir = "../../../CMSSW/CMSSW_7_4_15/src/CMGTools/H2TauTau/plotting/mt/fakeplots/"
 
 minChi2 = 0.8
 maxChi2 = 66.

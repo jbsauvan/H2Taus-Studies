@@ -3,7 +3,7 @@ import os
 from EfficiencyPlots import EfficiencyInBinsPlots, PlotInfo
 
 
-inputFileName = "../../Histos/StudyFakeRate/ZMuMu/v_7_2015-12-05/fakerates_ZMuMu.root"
+inputFileName = "../../../Histos/StudyFakeRate/ZMuMu/v_7_2015-12-05/fakerates_ZMuMu.root"
 plotDir = "plots/"
 name = "FakeFactors_ZMuMu_Binned"
 

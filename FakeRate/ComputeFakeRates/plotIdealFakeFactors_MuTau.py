@@ -4,7 +4,7 @@ from EfficiencyPlots import EfficiencyPlots, PlotInfo
 
 
 
-inputFileName = "../../Histos/StudyFakeRate/MuTau/W/v_5_2015-11-25/fakerates_MuTau_W.root"
+inputFileName = "../../../Histos/StudyFakeRate/MuTau/W/v_5_2015-11-25/fakerates_MuTau_W.root"
 plotDir = "plots/"
 name = "IdealFakeFactors_MuTau"
 systems = []

@@ -4,7 +4,7 @@ from ComparisonPlot import ComparisonPlot, Config
 from HistoConfigs import configZMuMu, configMuTau
 
 ## Input files and histograms
-histoDir = "../../Histos/StudyFakeRate/"
+histoDir = "../../../Histos/StudyFakeRate/"
 ZMuMuVersion = "v_4_2015-11-25"
 MuTauVersion = "v_6_2015-11-30"
 MuTauSamples = ["W", "TT", "QCD", "ZJ"]
