@@ -3,47 +3,36 @@ from ComparisonPlot import Config
 
 ## MT comparison
 configLowMT = Config()
-configLowMT.color = ROOT.kRed
-configLowMT.lineStyle = 1
-configLowMT.lineWidth = 2
-configLowMT.plotCfg = "HIST"
+configLowMT.color = ROOT.kBlack
+configLowMT.markerStyle = 20
 configLowMT.legend = "M_{T} < 40 GeV"
 
 configHighMT = Config()
-configHighMT.color = ROOT.kBlack
-configHighMT.markerStyle = 20
+configHighMT.color = ROOT.kRed-4
+configHighMT.markerStyle = 24
 configHighMT.legend = "M_{T} > 40 GeV"
 
 ## Background comparison
 configBackgrounds = {}
 configBackgrounds['W'] = Config()
-configBackgrounds['W'].color = ROOT.kRed
-configBackgrounds['W'].lineStyle = 1
+configBackgrounds['W'].color = ROOT.kBlack
 configBackgrounds['W'].markerStyle = 20
-configBackgrounds['W'].lineWidth = 1
-#configBackgrounds['W'].plotCfg = "HIST"
 configBackgrounds['W'].legend = "W+jets"
 #
 configBackgrounds['QCD'] = Config()
-configBackgrounds['QCD'].color = ROOT.kBlue
-configBackgrounds['QCD'].lineStyle = 1
+configBackgrounds['QCD'].color = ROOT.kBlue-4
 configBackgrounds['QCD'].markerStyle = 25
-configBackgrounds['QCD'].lineWidth = 1
-#configBackgrounds['QCD'].plotCfg = "HIST"
 configBackgrounds['QCD'].legend = "QCD"
 #
 configBackgrounds['TT'] = Config()
-configBackgrounds['TT'].color = ROOT.kMagenta
-configBackgrounds['TT'].lineStyle = 1
+configBackgrounds['TT'].color = ROOT.kRed-4
 configBackgrounds['TT'].markerStyle = 26
-configBackgrounds['TT'].lineWidth = 1
-#configBackgrounds['TT'].plotCfg = "HIST"
 configBackgrounds['TT'].legend = "t#bar{t}"
 
 
 ## Isolation comparison
 configInvertIso = Config()
-configInvertIso.color = ROOT.kRed
+configInvertIso.color = ROOT.kRed-4
 configInvertIso.lineStyle = 1
 configInvertIso.lineWidth = 2
 configInvertIso.plotCfg = "HIST"

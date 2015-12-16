@@ -5,9 +5,9 @@ from HistoConfigs import configIso, configInvertIso
 
 ## Input files and histograms
 histoDir = "../../../Histos/TauPolarization/Background"
-version = "v_1_2015-12-15"
+version = "v_3_2015-12-16"
 samples = ["W", "QCD", "TT"]
-isos = ["Iso_Medium", "IsoRaw_1_5"]
+isos = [("Iso_Medium","InvertIso_Medium"), ("IsoRaw_1_5","InvertIsoRaw_1_5"), ("Iso_Medium","InvertIso_Medium_RawOnly")]
 plotDir = "./plots/Isolation/"
 
 
@@ -15,7 +15,7 @@ histosIso = {}
 histosInvertIso = {}
 for sample in samples:
     histosIso[sample]  = ["{DIR}/{SAMPLE}/{VERSION}/polarization_background_{SAMPLE}.root".format(DIR=histoDir,SAMPLE=sample,VERSION=version),"hPolarization_MTlt40_{ISO}_{VAR}"]
-    histosInvertIso[sample] = ["{DIR}/{SAMPLE}/{VERSION}/polarization_background_{SAMPLE}.root".format(DIR=histoDir,SAMPLE=sample,VERSION=version), "hPolarization_MTlt40_Invert{ISO}_{VAR}"]
+    histosInvertIso[sample] = ["{DIR}/{SAMPLE}/{VERSION}/polarization_background_{SAMPLE}.root".format(DIR=histoDir,SAMPLE=sample,VERSION=version), "hPolarization_MTlt40_{ISO}_{VAR}"]
 
 
 ## Variables and selections
@@ -37,22 +37,22 @@ for var,options in variables.items():
             histoIso       = histosIso[sample]
             histoInvertIso = histosInvertIso[sample]
             plot = ComparisonPlot()
-            plot.name = var+"_"+sample+"_"+iso
+            plot.name = var+"_"+sample+"_"+iso[0]+"_"+iso[1]
             plot.plotDir = plotDir
             plot.logy = options["Log"]
             plot.legendPosition = legendPositions[var]
             #
-            configIso = deepcopy(configIso)
-            configIso.unitScaling = True
-            configIso.binWidthScaling = options["VariableWidth"]
-            configIso.xTitle = options["Title"]
-            plot.addHisto(histoIso[0],histoIso[1].format(VAR=var,ISO=iso), configIso)
+            cfgIso = deepcopy(configIso)
+            cfgIso.unitScaling = True
+            cfgIso.binWidthScaling = options["VariableWidth"]
+            cfgIso.xTitle = options["Title"]
+            plot.addHisto(histoIso[0],histoIso[1].format(VAR=var,ISO=iso[0]), cfgIso)
             #
-            configInvertIso = deepcopy(configInvertIso)
-            configInvertIso.unitScaling = True
-            configInvertIso.binWidthScaling = options["VariableWidth"]
-            configInvertIso.xTitle = options["Title"]
-            plot.addHisto(histoInvertIso[0],histoInvertIso[1].format(VAR=var,ISO=iso), configInvertIso)
+            cfgInvertIso = deepcopy(configInvertIso)
+            cfgInvertIso.unitScaling = True
+            cfgInvertIso.binWidthScaling = options["VariableWidth"]
+            cfgInvertIso.xTitle = options["Title"]
+            plot.addHisto(histoInvertIso[0],histoInvertIso[1].format(VAR=var,ISO=iso[1]), cfgInvertIso)
             plot.plot()
             plots.append(plot)
 

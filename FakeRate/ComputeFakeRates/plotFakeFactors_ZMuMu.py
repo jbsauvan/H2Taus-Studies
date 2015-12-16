@@ -13,7 +13,7 @@ if publish:
         publish = False
 
 
-inputFileName = "../../../Histos/StudyFakeRate/ZMuMu/v_7_2015-12-05/fakerates_ZMuMu.root"
+inputFileName = "../../../Histos/StudyFakeRate/ZMuMu/v_8_2015-12-16/fakerates_ZMuMu.root"
 plotDir = "plots/"
 name = "FakeFactors_ZMuMu_1D"
 systems = []
@@ -25,7 +25,7 @@ selectionLevels.append(("Iso_Medium",))
 
 selectionLevels2 = []
 selectionLevels2.append(("IsoRaw_1_5",))
-selectionLevels2.append(("IsoRaw_1_5",))
+selectionLevels2.append(("Iso_Medium",))
 selectionLevels2.append(("Iso_Medium",))
 
 referenceLevels = []
@@ -34,8 +34,8 @@ referenceLevels.append(("NoIso",))
 
 referenceLevels2 = []
 referenceLevels2.append(("InvertIsoRaw_1_5",))
-referenceLevels2.append(("InvertIsoRaw_3",))
 referenceLevels2.append(("InvertIso_Medium",))
+referenceLevels2.append(("InvertIso_Medium_RawOnly",))
 
 names = []
 names.append("IsoRaw_1_5_Vs_NoIso")
@@ -43,8 +43,8 @@ names.append("Iso_Medium_VsNoIso")
 
 names2 = []
 names2.append("IsoRaw_1_5_Vs_InvertIsoRaw_1_5")
-names2.append("IsoRaw_1_5_Vs_InvertIsoRaw_3")
 names2.append("Iso_Medium_Vs_InvertIso_Medium")
+names2.append("Iso_Medium_Vs_InvertIso_Medium_RawOnly")
 
 variables = ["tau_pt", "tau_eta", "tau_decayMode", "tau_pdgId", "nevents", "nvertices", "rho"]
 variableNames = {}

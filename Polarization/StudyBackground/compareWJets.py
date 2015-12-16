@@ -5,7 +5,7 @@ from HistoConfigs import configLowMT, configHighMT
 
 ## Input files and histograms
 histoDir = "../../../Histos/TauPolarization/Background"
-version = "v_1_2015-12-15"
+version = "v_3_2015-12-16"
 samples = ["W"]
 plotDir = "./plots/WMTCut/"
 

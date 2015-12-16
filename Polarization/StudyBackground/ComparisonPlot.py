@@ -8,7 +8,7 @@ class Config:
         self.color = ROOT.kBlack
         self.markerStyle = 20
         self.lineStyle = 1
-        self.lineWidth = 2
+        self.lineWidth = 1
         self.binWidthScaling = False
         self.unitScaling = False
         self.xTitle = ""
