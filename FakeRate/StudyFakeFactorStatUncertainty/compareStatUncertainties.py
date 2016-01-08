@@ -2,11 +2,11 @@ import ROOT
 from copy import copy
 import numpy as np
 from ComparisonPlot import ComparisonPlot, Config
-from HistoConfigs import configRawStat, configFactorStat, configFactorUpDown
+from HistoConfigs import *
 
 ## Input files and histograms
 histoDir = "../../../Histos/StudyFakeRate/MuTau_Stat/"
-version = "v_1_2016-01-07"
+version = "v_2_2016-01-08"
 samples = ["W", "TT", "QCD"]
 
 histos = {}
@@ -14,7 +14,7 @@ for sample in samples:
     histos[sample] = ["{DIR}/{SAMPLE}/{VERSION}/fakerates_MuTau_Stat_{SAMPLE}.root".format(DIR=histoDir,SAMPLE=sample,VERSION=version), "hFakeRate_MT40_InvertIso_Medium_mvis_vs_match5"]
 
 systematics = []
-for i in xrange(10):
+for i in xrange(100):
     systematics.append("Weight_Iso_Medium_VsPt_Fluctuate{}".format(i))
 #systematicsUpDown = []
 #systematicsUpDown.append("Weight_Iso_Medium_VsPt_Up")
@@ -121,16 +121,28 @@ for sample,histo in histos.items():
     histo1 = errorHisto(histo[0],histo[1])
     plot.addHisto(histo1, config1)
     #
-    config2 = copy(configFactorStat)
+    config2 = copy(configFactorStat3)
     config2.xTitle = "m_{T} [GeV]"
-    config2.legend = "Factor unc."
-    histo2 = fakeFactorErrorHisto(histo[0],histo[1], systematics)
+    config2.legend = "Factor unc. 10"
+    histo2 = fakeFactorErrorHisto(histo[0],histo[1], systematics[0:10])
     plot.addHisto(histo2, config2)
     #
-    config3 = copy(configFactorUpDown)
+    config3 = copy(configFactorStat2)
     config3.xTitle = "m_{T} [GeV]"
-    config3.legend = "Up/Down unc."
-    histo3 = fakeFactorUpDownErrorHisto(histo[0],histo[1], 'Weight_Iso_Medium_VsPt', 'Weight_Iso_Medium_VsPt_Up', 'Weight_Iso_Medium_VsPt_Down')
+    config3.legend = "Factor unc. 50"
+    histo3 = fakeFactorErrorHisto(histo[0],histo[1], systematics[0:50])
     plot.addHisto(histo3, config3)
+    #
+    config4 = copy(configFactorStat)
+    config4.xTitle = "m_{T} [GeV]"
+    config4.legend = "Factor unc. 100"
+    histo4 = fakeFactorErrorHisto(histo[0],histo[1], systematics)
+    plot.addHisto(histo4, config4)
+    #
+    #config3 = copy(configFactorUpDown)
+    #config3.xTitle = "m_{T} [GeV]"
+    #config3.legend = "Up/Down unc."
+    #histo3 = fakeFactorUpDownErrorHisto(histo[0],histo[1], 'Weight_Iso_Medium_VsPt', 'Weight_Iso_Medium_VsPt_Up', 'Weight_Iso_Medium_VsPt_Down')
+    #plot.addHisto(histo3, config3)
     plot.plot()
     plots.append(plot)
