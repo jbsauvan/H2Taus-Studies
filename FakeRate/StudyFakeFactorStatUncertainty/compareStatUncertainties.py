@@ -6,16 +6,22 @@ from HistoConfigs import *
 
 ## Input files and histograms
 histoDir = "../../../Histos/StudyFakeRate/MuTau_Stat/"
-version = "v_2_2016-01-08"
+version = "v_3_2016-01-09"
 samples = ["W", "TT", "QCD"]
 
 histos = {}
 for sample in samples:
     histos[sample] = ["{DIR}/{SAMPLE}/{VERSION}/fakerates_MuTau_Stat_{SAMPLE}.root".format(DIR=histoDir,SAMPLE=sample,VERSION=version), "hFakeRate_MT40_InvertIso_Medium_mvis_vs_match5"]
 
-systematics = []
-for i in xrange(100):
-    systematics.append("Weight_Iso_Medium_VsPt_Fluctuate{}".format(i))
+systematics = {
+    'Weight_Iso_Medium_Inclusive':[],
+    'Weight_Iso_Medium_VsPt':[],
+    'Weight_Iso_Medium_VsDecay':[],
+    'Weight_Iso_Medium_VsPtDecay':[],
+}
+for name,sys in systematics.items():
+    for i in xrange(200):
+        sys.append("{NAME}_Fluctuate{I}".format(NAME=name,I=i))
 #systematicsUpDown = []
 #systematicsUpDown.append("Weight_Iso_Medium_VsPt_Up")
 #systematicsUpDown.append("Weight_Iso_Medium_VsPt_Down")
@@ -109,40 +115,62 @@ def fakeFactorUpDownErrorHisto(fileName, histoName, sysNom, sysUp, sysDown):
 
 
 plots = []
+## Compare uncertainties with several numbers of tries
+for name,sys in systematics.items():
+    for sample,histo in histos.items():
+        plot = ComparisonPlot()
+        plot.name = "statUncertainties_mvis_"+sample+'_'+name
+        plot.logy = False
+        plot.legendPosition = legendPosition
+        #
+        config1 = copy(configRawStat)
+        config1.xTitle = "m_{T} [GeV]"
+        config1.legend = "Stat. unc."
+        histo1 = errorHisto(histo[0],name+'/'+histo[1])
+        plot.addHisto(histo1, config1)
+        #
+        config2 = copy(configFactorStat4)
+        config2.xTitle = "m_{T} [GeV]"
+        config2.legend = "Factor unc. 10"
+        histo2 = fakeFactorErrorHisto(histo[0],histo[1], sys[10:20])
+        plot.addHisto(histo2, config2)
+        #
+        config3 = copy(configFactorStat3)
+        config3.xTitle = "m_{T} [GeV]"
+        config3.legend = "Factor unc. 50"
+        histo3 = fakeFactorErrorHisto(histo[0],histo[1], sys[0:50])
+        plot.addHisto(histo3, config3)
+        #
+        config4 = copy(configFactorStat2)
+        config4.xTitle = "m_{T} [GeV]"
+        config4.legend = "Factor unc. 100"
+        histo4 = fakeFactorErrorHisto(histo[0],histo[1], sys[0:100])
+        plot.addHisto(histo4, config4)
+        #
+        config5 = copy(configFactorStat)
+        config5.xTitle = "m_{T} [GeV]"
+        config5.legend = "Factor unc. 200"
+        histo5 = fakeFactorErrorHisto(histo[0],histo[1], sys[0:200])
+        plot.addHisto(histo5, config5)
+        #
+        plot.plot()
+        plots.append(plot)
+#
+## Compare uncertainties for different fake factors
 for sample,histo in histos.items():
     plot = ComparisonPlot()
     plot.name = "statUncertainties_mvis_"+sample
     plot.logy = False
-    plot.legendPosition = legendPosition
+    plot.legendPosition = [0.2, 0.65, 0.55, 0.9]
     #
-    config1 = copy(configRawStat)
-    config1.xTitle = "m_{T} [GeV]"
-    config1.legend = "Stat. unc."
-    histo1 = errorHisto(histo[0],histo[1])
-    plot.addHisto(histo1, config1)
-    #
-    config2 = copy(configFactorStat3)
-    config2.xTitle = "m_{T} [GeV]"
-    config2.legend = "Factor unc. 10"
-    histo2 = fakeFactorErrorHisto(histo[0],histo[1], systematics[0:10])
-    plot.addHisto(histo2, config2)
-    #
-    config3 = copy(configFactorStat2)
-    config3.xTitle = "m_{T} [GeV]"
-    config3.legend = "Factor unc. 50"
-    histo3 = fakeFactorErrorHisto(histo[0],histo[1], systematics[0:50])
-    plot.addHisto(histo3, config3)
-    #
-    config4 = copy(configFactorStat)
-    config4.xTitle = "m_{T} [GeV]"
-    config4.legend = "Factor unc. 100"
-    histo4 = fakeFactorErrorHisto(histo[0],histo[1], systematics)
-    plot.addHisto(histo4, config4)
-    #
-    #config3 = copy(configFactorUpDown)
-    #config3.xTitle = "m_{T} [GeV]"
-    #config3.legend = "Up/Down unc."
-    #histo3 = fakeFactorUpDownErrorHisto(histo[0],histo[1], 'Weight_Iso_Medium_VsPt', 'Weight_Iso_Medium_VsPt_Up', 'Weight_Iso_Medium_VsPt_Down')
-    #plot.addHisto(histo3, config3)
-    plot.plot()
-    plots.append(plot)
+    configs = {}
+    histos = {}
+    for name,sys in systematics.items():
+        configs[name] = copy(configsFactorStat[name])
+        configs[name].xTitle = "m_{T} [GeV]"
+        configs[name].legend = name
+        histos[name] = fakeFactorErrorHisto(histo[0],histo[1], sys[0:200])
+        plot.addHisto(histos[name], configs[name])
+        #
+        plot.plot()
+        plots.append(plot)

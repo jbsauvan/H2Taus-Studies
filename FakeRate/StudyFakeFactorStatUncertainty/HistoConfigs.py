@@ -29,7 +29,29 @@ configFactorStat3.lineStyle = 3
 configFactorStat3.lineWidth = 2
 configFactorStat3.plotCfg = "HIST"
 configFactorStat3.legend = ""
-
+#
+configFactorStat4 = Config()
+configFactorStat4.color = ROOT.kOrange
+configFactorStat4.lineStyle = 3
+configFactorStat4.lineWidth = 2
+configFactorStat4.plotCfg = "HIST"
+configFactorStat4.legend = ""
+#
+configsFactorStat = {}
+configsFactorStat['Weight_Iso_Medium_Inclusive'] = Config()
+configsFactorStat['Weight_Iso_Medium_Inclusive'].color = ROOT.kBlue
+configsFactorStat['Weight_Iso_Medium_VsPt'] = Config()
+configsFactorStat['Weight_Iso_Medium_VsPt'].color = ROOT.kRed
+configsFactorStat['Weight_Iso_Medium_VsDecay'] = Config()
+configsFactorStat['Weight_Iso_Medium_VsDecay'].color = ROOT.kMagenta
+configsFactorStat['Weight_Iso_Medium_VsPtDecay'] = Config()
+configsFactorStat['Weight_Iso_Medium_VsPtDecay'].color = ROOT.kOrange
+for name,config in configsFactorStat.items():
+    config.lineStyle = 1
+    config.lineWidth = 2
+    config.plotCfg = "HIST"
+    config.legend = ""
+#
 configFactorUpDown = Config()
 configFactorUpDown.color = ROOT.kRed
 configFactorUpDown.lineStyle = 2
