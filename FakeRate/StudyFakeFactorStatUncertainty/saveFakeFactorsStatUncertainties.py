@@ -7,7 +7,7 @@ from HistoConfigs import *
 ## Input files and histograms
 histoDir = "../../../Histos/StudyFakeRate/MuTau_Stat/"
 version = "v_4_2016-01-10"
-samples = ["W", "TT", "QCD"]
+samples = ["W", "TT", "QCD", "TBar_tWch", "T_tWch", "WW", "WZ", "ZJ", "ZZ"]
 
 histos = {}
 for sample in samples:
@@ -20,13 +20,9 @@ systematics = {
     'Weight_Iso_Medium_VsPtDecay':[],
 }
 for name,sys in systematics.items():
-    for i in xrange(200):
+    for i in xrange(100):
         sys.append("{NAME}_Fluctuate{I}".format(NAME=name,I=i))
-#systematicsUpDown = []
-#systematicsUpDown.append("Weight_Iso_Medium_VsPt_Up")
-#systematicsUpDown.append("Weight_Iso_Medium_VsPt_Down")
 
-legendPosition = [0.2, 0.7, 0.45, 0.9]
 
 
 def errorHisto(fileName, histoName):
@@ -113,64 +109,13 @@ def fakeFactorUpDownErrorHisto(fileName, histoName, sysNom, sysUp, sysDown):
     
 
 
-
-plots = []
-## Compare uncertainties with several numbers of tries
+## Save fake factor uncertainties
+outputFile = ROOT.TFile.Open('./outputHistos/fakeFactorStatUncertainties.root', 'recreate')
+errorHistos = []
 for name,sys in systematics.items():
     for sample,histo in histos.items():
-        plot = ComparisonPlot()
-        plot.name = "statUncertainties_mvis_"+sample+'_'+name
-        plot.logy = False
-        plot.legendPosition = legendPosition
-        #
-        config1 = copy(configRawStat)
-        config1.xTitle = "m_{T} [GeV]"
-        config1.legend = "Stat. unc."
-        histo1 = errorHisto(histo[0],name+'/'+histo[1])
-        plot.addHisto(histo1, config1)
-        #
-        config2 = copy(configFactorStat4)
-        config2.xTitle = "m_{T} [GeV]"
-        config2.legend = "Factor unc. 10"
-        histo2 = fakeFactorErrorHisto(histo[0],histo[1], sys[10:20])
-        plot.addHisto(histo2, config2)
-        #
-        config3 = copy(configFactorStat3)
-        config3.xTitle = "m_{T} [GeV]"
-        config3.legend = "Factor unc. 50"
-        histo3 = fakeFactorErrorHisto(histo[0],histo[1], sys[0:50])
-        plot.addHisto(histo3, config3)
-        #
-        config4 = copy(configFactorStat2)
-        config4.xTitle = "m_{T} [GeV]"
-        config4.legend = "Factor unc. 100"
-        histo4 = fakeFactorErrorHisto(histo[0],histo[1], sys[0:100])
-        plot.addHisto(histo4, config4)
-        #
-        config5 = copy(configFactorStat)
-        config5.xTitle = "m_{T} [GeV]"
-        config5.legend = "Factor unc. 200"
-        histo5 = fakeFactorErrorHisto(histo[0],histo[1], sys[0:200])
-        plot.addHisto(histo5, config5)
-        #
-        plot.plot()
-        plots.append(plot)
-#
-## Compare uncertainties for different fake factors
-for sample,histo in histos.items():
-    plot = ComparisonPlot()
-    plot.name = "statUncertainties_mvis_"+sample
-    plot.logy = False
-    plot.legendPosition = [0.2, 0.65, 0.55, 0.9]
-    #
-    configs = {}
-    histos = {}
-    for name,sys in systematics.items():
-        configs[name] = copy(configsFactorStat[name])
-        configs[name].xTitle = "m_{T} [GeV]"
-        configs[name].legend = name
-        histos[name] = fakeFactorErrorHisto(histo[0],histo[1], sys[0:200])
-        plot.addHisto(histos[name], configs[name])
-        #
-        plot.plot()
-        plots.append(plot)
+        errorHistos.append(fakeFactorErrorHisto(histo[0],histo[1], sys))
+        errorHistos[-1].SetName('fakeUncertainty_{SAMPLE}_{NAME}'.format(SAMPLE=sample,NAME=name))
+        outputFile.cd()
+        errorHistos[-1].Write()
+outputFile.Close()
