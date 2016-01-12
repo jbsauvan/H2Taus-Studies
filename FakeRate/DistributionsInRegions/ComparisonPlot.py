@@ -10,6 +10,7 @@ class Config:
         self.lineWidth = 2
         self.binWidthScaling = False
         self.unitScaling = False
+        self.rebin = 1
         self.xTitle = ""
         self.yTitle = ""
         self.legend = ""
@@ -23,7 +24,8 @@ class Config:
         histo.SetLineWidth(self.lineWidth)
         histo.SetXTitle(self.xTitle)
         histo.SetYTitle(self.yTitle)
-        if self.unitScaling: histo.Scale(1./histo.GetSumOfWeights())
+        if self.rebin>1: histo.Rebin(self.rebin)
+        if self.unitScaling: histo.Scale(1./histo.Integral(0, histo.GetNbinsX()+1))
         if self.binWidthScaling: self.applyBinWidthScaling(histo)
 
     def applyBinWidthScaling(self, histo):
@@ -43,6 +45,7 @@ class ComparisonPlot:
         self.plotDir = "plots/"
         self.logy = False
         self.legendPosition = [0.5, 0.7, 0.95, 0.9]
+        self.yRange = []
         self.histos = []
 
 
@@ -67,7 +70,8 @@ class ComparisonPlot:
             if histo.GetMaximum()>maximum: maximum = histo.GetMaximum()
             if histo.GetMinimum()<minimum and histo.GetMinimum()>0.: minimum = histo.GetMinimum()
         for histo,config in self.histos:
-            if not self.logy: histo.SetAxisRange(0., maximum*1.1, "Y")
+            if len(self.yRange)==2: histo.SetAxisRange(self.yRange[0], self.yRange[1], "Y")
+            elif not self.logy: histo.SetAxisRange(0., maximum*1.1, "Y")
             else: histo.SetAxisRange(minimum*0.9, maximum*1.1, "Y")
             histo.Draw(config.plotCfg)
         if self.logy: canvas.SetLogy()

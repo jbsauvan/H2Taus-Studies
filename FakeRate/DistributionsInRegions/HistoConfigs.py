@@ -17,7 +17,7 @@ configMuTau.legend = "#mu#tau selection"
 ### W+jets study
 configMTbins = []
 configMTbins.append(Config())
-configMTbins[-1].color = ROOT.kOrange
+configMTbins[-1].color = ROOT.kBlack
 configMTbins[-1].lineStyle = 1
 configMTbins[-1].lineWidth = 2
 configMTbins[-1].plotCfg = "HIST"
@@ -31,11 +31,11 @@ configMTbins[-1].plotCfg = "HIST"
 configMTbins[-1].legend = "40 < M_{T} < 80GeV"
 #
 configMTbins.append(Config())
-configMTbins[-1].color = ROOT.kBlack
-configMTbins[-1].lineStyle = 1
+configMTbins[-1].color = ROOT.kRed
+configMTbins[-1].lineStyle = 2
 configMTbins[-1].lineWidth = 2
 configMTbins[-1].plotCfg = "HIST"
-configMTbins[-1].legend = "80GeV < M_{T}"
+configMTbins[-1].legend = "M_{T} > 80GeV"
 #####
 configRegions = {}
 configRegions['InvertIso_Medium_OS'] = Config()

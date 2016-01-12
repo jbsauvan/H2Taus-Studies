@@ -31,7 +31,7 @@ configFactorStat3.plotCfg = "HIST"
 configFactorStat3.legend = ""
 #
 configFactorStat4 = Config()
-configFactorStat4.color = ROOT.kOrange
+configFactorStat4.color = ROOT.kOrange+7
 configFactorStat4.lineStyle = 3
 configFactorStat4.lineWidth = 2
 configFactorStat4.plotCfg = "HIST"
@@ -45,7 +45,7 @@ configsFactorStat['Weight_Iso_Medium_VsPt'].color = ROOT.kRed
 configsFactorStat['Weight_Iso_Medium_VsDecay'] = Config()
 configsFactorStat['Weight_Iso_Medium_VsDecay'].color = ROOT.kMagenta
 configsFactorStat['Weight_Iso_Medium_VsPtDecay'] = Config()
-configsFactorStat['Weight_Iso_Medium_VsPtDecay'].color = ROOT.kOrange
+configsFactorStat['Weight_Iso_Medium_VsPtDecay'].color = ROOT.kOrange+7
 for name,config in configsFactorStat.items():
     config.lineStyle = 1
     config.lineWidth = 2

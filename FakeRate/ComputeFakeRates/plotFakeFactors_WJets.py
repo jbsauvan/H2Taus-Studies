@@ -1,6 +1,6 @@
 import ROOT
 import os
-from EfficiencyPlots import EfficiencyPlots, PlotInfo
+from EfficiencyPlots import EfficiencyInBinsPlots, PlotInfo
 
 publish = False
 publicationDir = ""
@@ -21,29 +21,55 @@ systems.append("")
 
 
 selectionLevels = []
-selectionLevels.append(("Iso_Medium_OS",))
-selectionLevels.append(("Iso_Medium_SS",))
+selectionLevels.append("Iso_Medium_OS")
+selectionLevels.append("Iso_Medium_SS")
 
 
 referenceLevels = []
-referenceLevels.append(("InvertIso_Medium_OS",))
-referenceLevels.append(("InvertIso_Medium_SS",))
+referenceLevels.append("InvertIso_Medium_OS")
+referenceLevels.append("InvertIso_Medium_SS")
 
 names = []
 names.append("Iso_Medium_OS_Vs_InvertIso_Medium_OS")
 names.append("Iso_Medium_SS_Vs_InvertIso_Medium_SS")
 
-variables = ["tau_pt_vs_mt_0", "tau_pdgId_vs_mt_0", "tau_pt_vs_mt_1", "tau_pdgId_vs_mt_1", "tau_pt_vs_mt_2", "tau_pdgId_vs_mt_2"]
+variables = ["tau_pt_vs_mt_", "tau_pdgId_vs_mt_"]
 variableNames = {}
 for var in variables:
     if 'tau_pt' in var: variableNames[var] = "p_{T}^{#tau} [GeV]"
     if 'tau_pdgId' in var: variableNames[var] = "|pdg ID| #times sign-flip"
 
+variableBins = {}
+variableBins["tau_pt_vs_mt_"] = [0,1,2]
+variableBins["tau_pdgId_vs_mt_"] = [0,1,2]
+
+variableLegends = {}
+variableLegends["tau_pt_vs_mt_"] = ["M_{T} < 40GeV","40 < M_{T} < 80GeV","M_{T} > 80GeV"]
+variableLegends["tau_pdgId_vs_mt_"] = ["M_{T} < 40GeV","40 < M_{T} < 80GeV","M_{T} > 80GeV"]
 
 
-plotInfos = [PlotInfo()]
-plotInfos[0].markerStyle = 20
-plotInfos[0].yTitle = "Fake factor" 
+
+colors = [
+    ROOT.kBlack,
+    ROOT.kRed,
+    ROOT.kRed,
+]
+
+markers = [
+    20,
+    20,
+    24,
+]
+
+
+plotInfos = []
+for i in xrange(3):
+    plotInfos.append(PlotInfo())
+    plotInfos[-1].markerStyle = markers[i]
+    plotInfos[-1].markerColor = colors[i]
+    plotInfos[-1].lineColor = colors[i]
+    plotInfos[-1].yTitle = "Fake factor"
+
 
 if not os.path.exists(plotDir+"/"+name):
     os.makedirs(plotDir+"/"+name)
@@ -52,21 +78,38 @@ outputFile = ROOT.TFile.Open(plotDir+"/"+name+"/"+name+".root", "RECREATE")
 efficiencyPlots = []
 
 
-effPlots = EfficiencyPlots()
+#effPlots = EfficiencyPlots()
+#effPlots.name = name
+#effPlots.publicationDir = publicationDir
+#effPlots.histoBaseName = "hFakeRate"
+#effPlots.inputFileNames = [inputFileName]
+#effPlots.systems = systems
+#effPlots.selectionLevels = selectionLevels
+#effPlots.plotInfos = plotInfos
+#effPlots.referenceLevels = referenceLevels 
+#effPlots.individualNames = names
+#effPlots.variables = variables
+#effPlots.variableNames = variableNames
+#effPlots.outputFile = outputFile
+#effPlots.divideOption = "pois"
+#effPlots.plot(0., 0.5)
+#efficiencyPlots.append(effPlots)
+
+effPlots = EfficiencyInBinsPlots()
 effPlots.name = name
-effPlots.publicationDir = publicationDir
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileNames = [inputFileName]
-effPlots.systems = systems
+effPlots.inputFileName = inputFileName
 effPlots.selectionLevels = selectionLevels
 effPlots.plotInfos = plotInfos
 effPlots.referenceLevels = referenceLevels 
 effPlots.individualNames = names
 effPlots.variables = variables
 effPlots.variableNames = variableNames
+effPlots.variableLegends = variableLegends
+effPlots.variableBins = variableBins
 effPlots.outputFile = outputFile
 effPlots.divideOption = "pois"
-effPlots.plot(0., 0.5)
+effPlots.plot(0., 0.3)
 efficiencyPlots.append(effPlots)
 
 
