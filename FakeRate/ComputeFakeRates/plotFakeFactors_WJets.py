@@ -13,7 +13,7 @@ publicationDir = ""
         #publish = False
 
 
-inputFileName = "../../../Histos/StudyFakeRate/MuTau_WJets/W/v_1_2016-01-07/fakerates_MuTau_WJets_W.root"
+inputFileName = "../../../Histos/StudyFakeRate/MuTau_WJets/W/v_3_2016-01-13/fakerates_MuTau_WJets_W.root"
 plotDir = "plots/"
 name = "FakeFactors_WJets"
 systems = []
@@ -33,23 +33,37 @@ names = []
 names.append("Iso_Medium_OS_Vs_InvertIso_Medium_OS")
 names.append("Iso_Medium_SS_Vs_InvertIso_Medium_SS")
 
-variables = ["tau_pt_vs_mt_", "tau_pdgId_vs_mt_"]
+variables = ["tau_pt_vs_mt_", "tau_pdgId_vs_mt_", "muon_pt_vs_mt_", "met_pt_vs_mt_", "muon_iso_vs_mt_", "delta_phi_muon_met_vs_mt_", "delta_phi_tau_met_vs_mt_"]
 variableNames = {}
 for var in variables:
     if 'tau_pt' in var: variableNames[var] = "p_{T}^{#tau} [GeV]"
     if 'tau_pdgId' in var: variableNames[var] = "|pdg ID| #times sign-flip"
+    if 'muon_pt' in var: variableNames[var] = "p_{T}^{#mu} [GeV]"
+    if 'muon_iso' in var: variableNames[var] = "Muon isolation"
+    if 'met_pt' in var: variableNames[var] = "MET [GeV]"
+    if 'delta_phi_muon_met_vs_mt_' in var: variableNames[var] = "#Delta#Phi(#mu,MET)"
+    if 'delta_phi_tau_met_vs_mt_' in var: variableNames[var] = "#Delta#Phi(#tau,MET)"
 
 variableBins = {}
-variableBins["tau_pt_vs_mt_"] = [0,1,2]
-variableBins["tau_pdgId_vs_mt_"] = [0,1,2]
-
 variableLegends = {}
-variableLegends["tau_pt_vs_mt_"] = ["M_{T} < 40GeV","40 < M_{T} < 80GeV","M_{T} > 80GeV"]
-variableLegends["tau_pdgId_vs_mt_"] = ["M_{T} < 40GeV","40 < M_{T} < 80GeV","M_{T} > 80GeV"]
+for var in variables:
+    variableBins[var] = [0,1,2,3]
+    variableLegends[var] = ["M_{T} < 20GeV", "20 < M_{T} < 40GeV","40 < M_{T} < 80GeV","M_{T} > 80GeV"]
+#variableBins["tau_pt_vs_mt_"] = [0,1,2,3]
+#variableBins["tau_pdgId_vs_mt_"] = [0,1,2,3]
+#variableBins["muon_pt_vs_mt_"] = [0,1,2,3]
+#variableBins["muon_pt_vs_mt_"] = [0,1,2,3]
+#variableBins["muon_iso_vs_mt_"] = [0,1,2,3]
+#variableBins["met_pt_vs_mt_"] = [0,1,2,3]
+
+
+#variableLegends["tau_pt_vs_mt_"] = ["M_{T} < 20GeV", "20 < M_{T} < 40GeV","40 < M_{T} < 80GeV","M_{T} > 80GeV"]
+#variableLegends["tau_pdgId_vs_mt_"] = ["M_{T} < 20GeV", "20 < M_{T} < 40GeV","40 < M_{T} < 80GeV","M_{T} > 80GeV"]
 
 
 
 colors = [
+    ROOT.kBlack,
     ROOT.kBlack,
     ROOT.kRed,
     ROOT.kRed,
@@ -57,13 +71,14 @@ colors = [
 
 markers = [
     20,
+    24,
     20,
     24,
 ]
 
 
 plotInfos = []
-for i in xrange(3):
+for i in xrange(len(colors)):
     plotInfos.append(PlotInfo())
     plotInfos[-1].markerStyle = markers[i]
     plotInfos[-1].markerColor = colors[i]
