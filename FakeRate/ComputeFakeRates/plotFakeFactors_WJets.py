@@ -1,6 +1,6 @@
 import ROOT
 import os
-from EfficiencyPlots import EfficiencyInBinsPlots, PlotInfo
+from EfficiencyPlots import EfficiencyPlots, EfficiencyInBinsPlots, PlotInfo
 
 publish = False
 publicationDir = ""
@@ -126,6 +126,58 @@ effPlots.outputFile = outputFile
 effPlots.divideOption = "pois"
 effPlots.plot(0., 0.3)
 efficiencyPlots.append(effPlots)
+
+
+########################################################
+
+systems = []
+systems.append("")
+
+selectionLevels = []
+selectionLevels.append(("Iso_Medium_OS",))
+selectionLevels.append(("Iso_Medium_SS",))
+
+
+referenceLevels = []
+referenceLevels.append(("InvertIso_Medium_OS",))
+referenceLevels.append(("InvertIso_Medium_SS",))
+
+names = []
+names.append("Iso_Medium_OS_Vs_InvertIso_Medium_OS")
+names.append("Iso_Medium_SS_Vs_InvertIso_Medium_SS")
+
+
+variables = ["mt"]
+variableNames = {}
+variableNames["mt"] = "m_{T} [GeV]"
+
+
+
+plotInfos = [PlotInfo()]
+plotInfos[0].markerStyle = 20
+plotInfos[0].yTitle = "Fake factor" 
+
+if not os.path.exists(plotDir+"/"+name):
+    os.makedirs(plotDir+"/"+name)
+outputFile = ROOT.TFile.Open(plotDir+"/"+name+"/"+name+".root", "RECREATE")
+
+
+effPlots2 = EfficiencyPlots()
+effPlots2.name = name
+effPlots2.publicationDir = publicationDir
+effPlots2.histoBaseName = "hFakeRate"
+effPlots2.inputFileNames = [inputFileName]
+effPlots2.systems = systems
+effPlots2.selectionLevels = selectionLevels
+effPlots2.plotInfos = plotInfos
+effPlots2.referenceLevels = referenceLevels 
+effPlots2.individualNames = names
+effPlots2.variables = variables
+effPlots2.variableNames = variableNames
+effPlots2.outputFile = outputFile
+effPlots2.divideOption = "pois"
+effPlots2.plot(0., 0.3)
+efficiencyPlots.append(effPlots2)
 
 
 outputFile.Close()
