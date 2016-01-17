@@ -65,3 +65,19 @@ configRegions['Iso_Medium_SS'].lineStyle = 2
 configRegions['Iso_Medium_SS'].lineWidth = 2
 configRegions['Iso_Medium_SS'].plotCfg = "HIST"
 configRegions['Iso_Medium_SS'].legend = "SS, iso"
+######
+configMT = Config()
+configMT.color = ROOT.kBlack
+configMT.lineStyle = 1
+configMT.lineWidth = 2
+configMT.plotCfg = "HIST"
+configMT.legend = "m_{T}^{reco}"
+configMT.xTitle = "m_{T} [GeV]"
+#
+configMTgen = Config()
+configMTgen.color = ROOT.kBlack
+configMTgen.lineStyle = 2
+configMTgen.lineWidth = 2
+configMTgen.plotCfg = "HIST"
+configMTgen.legend = "m_{T}^{gen}"
+configMTgen.xTitle = "m_{T} [GeV]"

@@ -109,6 +109,7 @@ class EfficiencyPlots:
     def __init__(self):
         self.name = "efficiencies"
         self.divideOption = "cp" ##  Default: Clopper-Pearson interval 
+        self.rebin = 1
         self.plotDir = "plots"
         self.publicationDir = ""
         self.inputFileNames = []
@@ -152,11 +153,13 @@ class EfficiencyPlots:
                         raise StandardError("Cannot find histo "+passHistoName+" in file "+inputFile.GetName())
                     passHisto.__class__ = ROOT.TH1F
                     passHisto.SetDirectory(0)
+                    if self.rebin>1: passHisto.Rebin(self.rebin)
                     totalHisto = inputFile.Get(totalHistoName)
                     if not totalHisto:
                         raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
                     totalHisto.__class__ = ROOT.TH1F
                     totalHisto.SetDirectory(0)
+                    if self.rebin>1: totalHisto.Rebin(self.rebin)
                     #
                     effPlot.efficiency(passHisto, totalHisto, self.divideOption, plotInfo)
                     effPlot.efficiencyGraphs[-1].SetName(self.name+fsystem+fselectionLevel+freferenceLevel+fvar)

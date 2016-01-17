@@ -5,7 +5,7 @@ import HistoConfigs
 
 ## Input files and histograms
 histoDir = "../../../Histos/StudyFakeRate/MuTau_WJets/W/"
-version = "v_2_2016-01-11"
+version = "v_4_2016-01-15"
 
 inputFileName = "{DIR}/{VERSION}/fakerates_MuTau_WJets_W.root".format(DIR=histoDir,VERSION=version)
 histoNames = "hFakeRate_{SEL}_{VAR}_vs_mt_{BIN}"
@@ -36,6 +36,7 @@ legendPositions = {
     "tau_pdgId":[0.15, 0.7, 0.50, 0.9],
     "tau_iso":[0.6, 0.7, 0.95, 0.9],
     "tau_outside_photons_pt":[0.6, 0.7, 0.95, 0.9],
+    "tau_jet_pt":[0.6, 0.7, 0.95, 0.9],
 }
 
 ## Compare OS/SS distributions in different MT bins
@@ -132,6 +133,46 @@ for var,options in variablesIso.items():
             config.rebin = options["Rebin"]
             config.xTitle = options["Title"]
             #config.legend = 'MT bin {}'.format(bin)
+            plot.addHisto(inputFileName,histoNames.format(VAR=var,SEL=selection,BIN=bin), config)
+        plot.plot()
+        plots.append(plot)
+
+
+#############################################
+##### MT vs generator-level MT
+plots = []
+plot = ComparisonPlot()
+plot.name = 'mt_vs_mt_gen'
+plot.plotDir = 'plots/WJets/'
+plot.logy = False
+plot.legendPosition = [0.6, 0.7, 0.95, 0.9]
+plot.addHisto(inputFileName, 'hFakeRate_OS_mt', HistoConfigs.configMT)
+plot.addHisto(inputFileName, 'hFakeRate_OS_mt_gen', HistoConfigs.configMTgen)
+plot.plot()
+plots.append(plot)
+
+
+#############################################
+### Compare jet pT in different MT bins and in different anti-isolation regions
+variables = {
+    "tau_jet_pt":{"Title":"p_{T}^{jet} [GeV]", "Log":False, "VariableWidth":True},
+}
+selections = ['InvertIso_Medium_OS', 'Loose10InvertIso_Medium_OS', 'Loose20InvertIso_Medium_OS']
+plots = []
+for var,options in variables.items():
+    for selection in selections:
+        plot = ComparisonPlot()
+        plot.name = var+"_"+selection+'_MTbins'
+        plot.plotDir = 'plots/WJets/'
+        plot.logy = options["Log"]
+        plot.legendPosition = legendPositions[var]
+        #plot.yRange = options["YRange"]
+        for bin in mtbins:
+            config = copy(HistoConfigs.configMTbins[bin])
+            config.unitScaling = True
+            config.binWidthScaling = options["VariableWidth"]
+            #config.rebin = options["Rebin"]
+            config.xTitle = options["Title"]
             plot.addHisto(inputFileName,histoNames.format(VAR=var,SEL=selection,BIN=bin), config)
         plot.plot()
         plots.append(plot)
