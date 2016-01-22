@@ -2,11 +2,16 @@
  - v_4_2015-11-25 
  - v_7_2015-12-05 
  - v_8_2015-12-16 
+ - v_9_2016-01-20 
 
 * StudyFakeRate/MuTau/ 
  - v_5_2015-11-25 
  - v_6_2015-11-30
  - v_10_2015-12-09
+ - v_12_2016-01-21 
+
+* StudyFakeRate/MuTau/HighMT 
+ - v_1_2016-01-21
 
 * StudyFakeRate/MuTau_Stat
  - v_4_2016-01-10
@@ -14,6 +19,10 @@
 * StudyFakeRate/MuTau_WJets
  - v_1_2016-01-07
  - v_2_2016-01-11
+ - v_4_2016-01-15
+
+* StudyFakeRate/MuTau_FakeRateWJetsHighMT
+ - v_1_2016-01-21
 
 * TauPolarization/Background/ 
  - v_3_2015-12-16
