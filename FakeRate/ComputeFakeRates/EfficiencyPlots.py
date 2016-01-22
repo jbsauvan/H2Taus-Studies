@@ -68,6 +68,13 @@ class EfficiencyPlot:
         self.efficiencyGraphs[-1].SetLineColor(plotInfo.lineColor)
         self.plotInfos.append(plotInfo)
 
+    def addGraph(self, graph, plotInfo):
+        self.efficiencyGraphs.append(graph)
+        self.efficiencyGraphs[-1].SetMarkerStyle(plotInfo.markerStyle)
+        self.efficiencyGraphs[-1].SetMarkerColor(plotInfo.markerColor)
+        self.efficiencyGraphs[-1].SetLineColor(plotInfo.lineColor)
+        self.plotInfos.append(plotInfo)
+
     def plot(self, minEff=0.95, maxEff=1.01):
         setPlotStyle()
         if not os.path.exists(self.plotDir):
@@ -75,8 +82,12 @@ class EfficiencyPlot:
         if self.publicationDir!="" and not os.path.exists(self.publicationDir):
             os.makedirs(self.publicationDir)
         np = self.efficiencyGraphs[-1].GetN()
-        xMin = self.totalHistos[-1].GetXaxis().GetBinLowEdge(1)
-        xMax = self.totalHistos[-1].GetXaxis().GetBinUpEdge(self.totalHistos[-1].GetNbinsX())
+        if len(self.totalHistos)>0 and self.totalHistos[-1]:
+            xMin = self.totalHistos[-1].GetXaxis().GetBinLowEdge(1)
+            xMax = self.totalHistos[-1].GetXaxis().GetBinUpEdge(self.totalHistos[-1].GetNbinsX())
+        else:
+            xMin = self.efficiencyGraphs[-1].GetX()[0]-self.efficiencyGraphs[-1].GetEXlow()[0]
+            xMax = self.efficiencyGraphs[-1].GetX()[np-1]+self.efficiencyGraphs[-1].GetEXlow()[np-1]
         self.canvas = ROOT.TCanvas("c_"+self.name, "c_"+self.name, 800, 800)
         self.canvas.SetGrid()
 

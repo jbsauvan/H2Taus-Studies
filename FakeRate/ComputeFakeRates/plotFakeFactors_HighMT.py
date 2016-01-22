@@ -2,7 +2,7 @@ import ROOT
 import os
 from EfficiencyPlots import EfficiencyPlots, PlotInfo
 
-publish = True
+publish = False
 publicationDir = ""
 if publish:
     if os.path.exists("/afs/cern.ch/user/j/jsauvan/www/"):
@@ -13,9 +13,9 @@ if publish:
         publish = False
 
 
-inputFileName = "../../../Histos/StudyFakeRate/ZMuMu/v_9_2016-01-20/fakerates_ZMuMu.root"
+inputFileName = "../../../Histos/StudyFakeRate/MuTau_FakeRateWJetsHighMT/W/v_1_2016-01-21/fakerates_MuTau_WJetsHighMT_W.root"
 plotDir = "plots/"
-name = "FakeFactors_ZMuMu_1D"
+name = "FakeFactors_HighMT_1D"
 systems = []
 systems.append("")
 
@@ -46,7 +46,7 @@ names2.append("IsoRaw_1_5_Vs_InvertIsoRaw_1_5")
 names2.append("Iso_Medium_Vs_InvertIso_Medium")
 names2.append("Iso_Medium_Vs_InvertIso_Medium_RawOnly")
 
-variables = ["tau_pt", "tau_eta", "tau_decayMode", "tau_pdgId", "nevents", "nvertices", "rho", "tau_jet_pt"]
+variables = ["tau_pt", "tau_eta", "tau_decayMode", "tau_pdgId", "nevents", "tau_jet_pt"]
 variableNames = {}
 variableNames["tau_pt"] = "p_{T}^{#tau} [GeV]"
 variableNames["tau_eta"] = "#eta^{#tau}"
