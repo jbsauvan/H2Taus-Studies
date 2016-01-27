@@ -106,12 +106,113 @@ class EfficiencyPlot:
         self.canvas.Print(self.plotDir+"/"+self.name+".eps")
         self.canvas.Print(self.plotDir+"/"+self.name+".png")
         self.canvas.Print(self.plotDir+"/"+self.name+".pdf")
-        self.canvas.Print(self.plotDir+"/"+self.name+".C")
+        #self.canvas.Print(self.plotDir+"/"+self.name+".C")
         if self.publicationDir!="":
             self.canvas.Print(self.publicationDir+"/"+self.name+".eps")
             self.canvas.Print(self.publicationDir+"/"+self.name+".png")
             self.canvas.Print(self.publicationDir+"/"+self.name+".pdf")
-            self.canvas.Print(self.publicationDir+"/"+self.name+".C")
+            #self.canvas.Print(self.publicationDir+"/"+self.name+".C")
+
+
+class DataMCEfficiencyPlot:
+    def __init__(self):
+        self.name = 'efficiencies'
+        self.divideOption = "cp" ##  Default: Clopper-Pearson interval 
+        self.rebin = 1
+        self.plotDir = "plots"
+        self.selectionHistoName = ''
+        self.referenceHistoName = ''
+        self.dataFileNames = []
+        self.mcFileNames = []
+        self.mcRescalings = []
+        self.referenceMC = False
+        self.dataPlotInfo = None
+        self.mcPlotInfo = None
+        self.referencePlotInfo = None
+        self.outputFile = None
+        self.plots = []
+
+
+    def plot(self, minEff=0.95, maxEff=1.01):
+        effPlot = EfficiencyPlot()
+        effPlot.name = self.name
+        effPlot.plotDir = self.plotDir
+        dataPassHisto = None
+        dataTotalHisto = None
+        mcPassHisto = None
+        mcTotalHisto = None
+        refPassHisto = None
+        refTotalHisto = None
+        idata = 0
+        #### Data
+        for dataFileName in self.dataFileNames:
+            inputFile = ROOT.TFile.Open(dataFileName)
+            passHisto = inputFile.Get(self.selectionHistoName)
+            if not passHisto:
+                raise StandardError("Cannot find histo "+self.selectionHistoName)
+            passHisto.__class__ = ROOT.TH1F
+            passHisto.SetDirectory(0)
+            if self.rebin>1: passHisto.Rebin(self.rebin)
+            totalHisto = inputFile.Get(self.referenceHistoName)
+            if not totalHisto:
+                raise StandardError("Cannot find histo "+self.referenceHistoName)
+            totalHisto.__class__ = ROOT.TH1F
+            totalHisto.SetDirectory(0)
+            if self.rebin>1: totalHisto.Rebin(self.rebin)
+            #
+            inputFile.Close()
+            if not dataPassHisto: dataPassHisto = passHisto.Clone('{0}_{1}_Data_{2}'.format(passHisto.GetName(), self.name, idata))
+            else: dataPassHisto.Add(passHisto)
+            if not dataTotalHisto: dataTotalHisto = totalHisto.Clone('{0}_{1}_Data_{2}'.format(totalHisto.GetName(), self.name, idata))
+            else: dataTotalHisto.Add(totalHisto)
+            #
+            idata += 1
+        #### MC
+        imc = 0
+        for mcFileName,mcRescaling in zip(self.mcFileNames, self.mcRescalings):
+            inputFile = ROOT.TFile.Open(mcFileName)
+            passHisto = inputFile.Get(self.selectionHistoName)
+            if not passHisto:
+                raise StandardError("Cannot find histo "+self.selectionHistoName)
+            passHisto.__class__ = ROOT.TH1F
+            passHisto.SetDirectory(0)
+            passHisto.Scale(mcRescaling)
+            if self.rebin>1: passHisto.Rebin(self.rebin)
+            totalHisto = inputFile.Get(self.referenceHistoName)
+            if not totalHisto:
+                raise StandardError("Cannot find histo "+self.referenceHistoName)
+            totalHisto.__class__ = ROOT.TH1F
+            totalHisto.SetDirectory(0)
+            totalHisto.Scale(mcRescaling)
+            if self.rebin>1: totalHisto.Rebin(self.rebin)
+            #
+            inputFile.Close()
+            if not mcPassHisto: mcPassHisto = passHisto.Clone('{0}_{1}_MC_{2}'.format(passHisto.GetName(), self.name, imc))
+            else: mcPassHisto.Add(passHisto)
+            if not mcTotalHisto: mcTotalHisto = totalHisto.Clone('{0}_{1}_MC_{2}'.format(totalHisto.GetName(), self.name, imc))
+            else: mcTotalHisto.Add(totalHisto)
+            #
+            if imc==0 and self.referenceMC: 
+                refPassHisto = passHisto.Clone('{0}_{1}_Ref'.format(passHisto.GetName(), self.name))
+                refTotalHisto = totalHisto.Clone('{0}_{1}_Ref'.format(totalHisto.GetName(), self.name))
+            imc += 1
+        #
+        effPlot.efficiency(dataPassHisto, dataTotalHisto, self.divideOption, self.dataPlotInfo)
+        effPlot.efficiencyGraphs[-1].SetName('{0}_Data'.format(self.name))
+        #
+        effPlot.efficiency(mcPassHisto, mcTotalHisto, self.divideOption, self.mcPlotInfo)
+        effPlot.efficiencyGraphs[-1].SetName('{0}_MC'.format(self.name))
+        #
+        if refPassHisto and refTotalHisto:
+            effPlot.efficiency(refPassHisto, refTotalHisto, self.divideOption, self.referencePlotInfo)
+            effPlot.efficiencyGraphs[-1].SetName('{0}_Ref'.format(self.name))
+        effPlot.drawLegend = True
+        effPlot.plot(minEff,maxEff)
+        self.plots.append(effPlot)
+        ## Store efficiencies in output ROOT file
+        self.outputFile.cd()
+        for graph in effPlot.efficiencyGraphs:
+            graph.Write()
 
 
 
