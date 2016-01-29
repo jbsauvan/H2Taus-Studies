@@ -3,6 +3,13 @@
  - v_7_2015-12-05 
  - v_8_2015-12-16 
  - v_9_2016-01-20 
+ *** Replaced by StudyFakeRate/MuMu ***
+
+* StudyFakeRate/MuMu
+ - v_1_2016-01-26
+
+* StudyFakeRate/MuMu_MTStudy/ 
+ - v_1_2016-01-27 
 
 * StudyFakeRate/MuTau/ 
  - v_5_2015-11-25 
@@ -20,9 +27,15 @@
  - v_1_2016-01-07
  - v_2_2016-01-11
  - v_4_2016-01-15
+ - v_5_2016-01-28
 
 * StudyFakeRate/MuTau_FakeRateWJetsHighMT
  - v_1_2016-01-21
+ - v_2_2016-01-28
+ - v_3_2016-01-29
+
+* StudyFakeRate/MuTau_FakeRate_QCDSS 
+ - v_2_2016-01-28
 
 * TauPolarization/Background/ 
  - v_3_2015-12-16
