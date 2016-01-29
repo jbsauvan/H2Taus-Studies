@@ -1,13 +1,14 @@
 import ROOT
 import os
+import copy
 from EfficiencyPlots import DataMCEfficiencyPlot, PlotInfo
 from CMGTools.H2TauTau.proto.plotter.Samples import createSampleLists
 from CMGTools.H2TauTau.proto.plotter.HistCreator import setSumWeights
 
 
-inputDirectory = '../../../Histos/StudyFakeRate/MuMu/'
-version = 'v_1_2016-01-26'
-fileNameTemplate = 'fakerates_ZMuMu_{SAMPLE}.root'
+inputDirectory = '../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/'
+version = 'v_2_2016-01-28'
+fileNameTemplate = 'fakerates_MuTau_QCDSS_{SAMPLE}.root'
 
 dataSamples = [
     'Data_Run15D_05Oct',
@@ -15,13 +16,13 @@ dataSamples = [
 ]
 
 mcSamples = [
-    'Z',
     'QCD',
+    'W',
+    'Z',
     'TBar_tWch',
     'TT',
     'T_tWch',
     'VVTo2L2Nu',
-    'W',
     'WWTo1L1Nu2Q',
     'WZTo1L1Nu2Q',
     'WZTo1L3Nu',
@@ -31,7 +32,7 @@ mcSamples = [
 ]
 
 
-name = "FakeFactors_ZMuMu_DataMC"
+name = "FakeFactors_QCDSS_DataMC"
 plotDir = "plots/"
 
 selections = [
@@ -40,9 +41,11 @@ selections = [
 
 
 
-variables = ["tau_pt"]
+variables = ["tau_pt", 'tau_jet_pt', "tau_decayMode"]
 variableNames = {}
 variableNames["tau_pt"] = "p_{T}^{#tau} [GeV]"
+variableNames["tau_jet_pt"] = "p_{T}^{jet} [GeV]"
+variableNames["tau_decayMode"] = "decayMode"
 
 histoTemplate = 'hFakeRate_{SEL}_{VAR}'
 
@@ -75,12 +78,12 @@ cmgSampleTranslation = {
     'ZZTo2L2Q':'ZZTo2L2Q',
 }
 int_lumi = 2094.2 # from Alexei's email
-analysis_dir = '/afs/cern.ch/user/s/steggema/work/public/mm/190116/'
-tree_prod_name = 'H2TauTauTreeProducerMuMu'
+analysis_dir = '/afs/cern.ch/user/s/steggema/work/public/mt/151215/'
+tree_prod_name = 'H2TauTauTreeProducerTauMu'
 data_dir = analysis_dir
 samples_mc, samples_data, samples, all_samples, sampleDict = createSampleLists(analysis_dir=analysis_dir, tree_prod_name=tree_prod_name)
 for sample in all_samples:
-    setSumWeights(sample)
+    setSumWeights(sample, directory='MCWeighter')
 
 mcRescalings = []
 for sample in mcSamples:
@@ -107,7 +110,7 @@ plotInfos[2].markerStyle = 24
 plotInfos[2].markerColor = ROOT.kRed
 plotInfos[2].lineColor = ROOT.kRed
 plotInfos[2].yTitle = "Fake factor"
-plotInfos[2].legend = 'Z MC'
+plotInfos[2].legend = 'QCD MC'
 
 if not os.path.exists(plotDir+"/"+name):
     os.makedirs(plotDir+"/"+name)
@@ -126,9 +129,12 @@ for variable in variables:
         effPlot.mcFileNames = mcFileNames
         effPlot.mcRescalings = mcRescalings
         effPlot.referenceMC = True
-        effPlot.dataPlotInfo = plotInfos[0]
-        effPlot.mcPlotInfo = plotInfos[1]
-        effPlot.referencePlotInfo = plotInfos[2]
+        effPlot.dataPlotInfo = copy.deepcopy(plotInfos[0])
+        effPlot.mcPlotInfo = copy.deepcopy(plotInfos[1])
+        effPlot.referencePlotInfo = copy.deepcopy(plotInfos[2])
+        effPlot.dataPlotInfo.xTitle = variableNames[variable]
+        effPlot.mcPlotInfo.xTitle = variableNames[variable]
+        effPlot.referencePlotInfo.xTitle = variableNames[variable]
         effPlot.outputFile = outputFile
         effPlot.divideOption = "pois"
         #effPlot.rebin = 2

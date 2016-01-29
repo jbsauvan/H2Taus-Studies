@@ -3,9 +3,9 @@ import os
 from EfficiencyPlots import EfficiencyInBinsPlots, PlotInfo
 
 
-inputFileName = "../../../Histos/StudyFakeRate/MuTau_FakeRateWJetsHighMT/W/v_2_2016-01-28/fakerates_MuTau_WJetsHighMT_W.root"
+inputFileName = "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/QCD/v_2_2016-01-28/fakerates_MuTau_QCDSS_QCD.root"
 plotDir = "plots/"
-name = "FakeFactors_HighMT_Binned"
+name = "FakeFactors_QCDSS_Binned"
 
 systems = []
 systems.append("")
