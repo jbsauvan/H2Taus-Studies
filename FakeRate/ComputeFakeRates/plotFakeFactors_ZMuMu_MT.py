@@ -14,13 +14,16 @@ publicationDir = ""
         #publish = False
 
 
-inputFileName = "../../../Histos/StudyFakeRate/MuMu_MTStudy/Z/v_1_2016-01-27/fakerates_ZMuMu_MTStudy_Z.root"
-plotDir = "plots/"
-name = "FakeFactors_ZMuMu_MT"
+inputFileName = "../../../Histos/StudyFakeRate/MuMu_MTStudy/Z/v_4_2016-02-02/fakerates_ZMuMu_MTStudy_Z.root"
+plotDir = "plots/FakeFactors_ZMuMu_MT/"
 
-if not os.path.exists(plotDir+"/"+name):
-    os.makedirs(plotDir+"/"+name)
-outputFile = ROOT.TFile.Open(plotDir+"/"+name+"/"+name+".root", "RECREATE")
+muon2PtCuts = [6,7,8,9,10,12,14,16,18,20]
+directories = ['Muon2PtCut_{CUT}/'.format(CUT=cut) for cut in muon2PtCuts]
+directories.append('')
+
+if not os.path.exists(plotDir):
+    os.makedirs(plotDir)
+outputFile = ROOT.TFile.Open(plotDir+"/FakeFactors_ZMuMu_MT.root", "RECREATE")
 
 ################################################
 systems = []
@@ -50,23 +53,29 @@ plotInfos[0].yTitle = "Fake factor"
 
 efficiencyPlots = []
 
-effPlots = EfficiencyPlots()
-effPlots.name = name
-effPlots.publicationDir = publicationDir
-effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileNames = [inputFileName]
-effPlots.systems = systems
-effPlots.selectionLevels = selectionLevels
-effPlots.plotInfos = plotInfos
-effPlots.referenceLevels = referenceLevels 
-effPlots.individualNames = names
-effPlots.variables = variables
-effPlots.variableNames = variableNames
-effPlots.outputFile = outputFile
-effPlots.divideOption = "pois"
-effPlots.rebin = 2
-effPlots.plot(0., 0.3)
-efficiencyPlots.append(effPlots)
+for directory in directories:
+    #namesCopy = []
+    #for n in names:
+        #namesCopy.append('{DIR}{NAME}'.format(DIR=directory.replace('/','_'),NAME=n))
+    effPlots = EfficiencyPlots()
+    effPlots.plotDir = plotDir
+    effPlots.name = '{DIR}'.format(DIR=directory.replace('/',''))
+    if effPlots.name=='': effPlots.name = 'Muon2PtCut_5'
+    effPlots.publicationDir = publicationDir
+    effPlots.histoBaseName = "{DIR}hFakeRate".format(DIR=directory)
+    effPlots.inputFileNames = [inputFileName]
+    effPlots.systems = systems
+    effPlots.selectionLevels = selectionLevels
+    effPlots.plotInfos = plotInfos
+    effPlots.referenceLevels = referenceLevels 
+    effPlots.individualNames = names
+    effPlots.variables = variables
+    effPlots.variableNames = variableNames
+    effPlots.outputFile = outputFile
+    effPlots.divideOption = "pois"
+    effPlots.rebin = 2
+    effPlots.plot(0., 0.3)
+    efficiencyPlots.append(effPlots)
 
 ################################################
 systems2 = []
@@ -103,23 +112,29 @@ plotInfos2[1].legend = 'm_{T}>70GeV'
 
 
 
-effPlots2 = EfficiencyPlots()
-effPlots2.name = name
-effPlots2.publicationDir = publicationDir
-effPlots2.histoBaseName = "hFakeRate"
-effPlots2.inputFileNames = [inputFileName]*2
-effPlots2.systems = systems2
-effPlots2.selectionLevels = selectionLevels2
-effPlots2.plotInfos = plotInfos2
-effPlots2.referenceLevels = referenceLevels2
-effPlots2.individualNames = names2
-effPlots2.variables = variables2
-effPlots2.variableNames = variableNames2
-effPlots2.outputFile = outputFile
-effPlots2.divideOption = "pois"
-#effPlots2.rebin = 2
-effPlots2.plot(0., 0.3)
-efficiencyPlots.append(effPlots2)
+for directory in directories:
+    #namesCopy = []
+    #for n in names2:
+        #namesCopy.append('{DIR}{NAME}'.format(DIR=directory.replace('/','_'),NAME=n))
+    effPlots2 = EfficiencyPlots()
+    effPlots2.plotDir = plotDir
+    effPlots2.name = '{DIR}'.format(DIR=directory.replace('/',''))
+    if effPlots2.name=='': effPlots2.name = 'Muon2PtCut_5'
+    effPlots2.publicationDir = publicationDir
+    effPlots2.histoBaseName = "{DIR}hFakeRate".format(DIR=directory)
+    effPlots2.inputFileNames = [inputFileName]*2
+    effPlots2.systems = systems2
+    effPlots2.selectionLevels = selectionLevels2
+    effPlots2.plotInfos = plotInfos2
+    effPlots2.referenceLevels = referenceLevels2
+    effPlots2.individualNames = names2
+    effPlots2.variables = variables2
+    effPlots2.variableNames = variableNames2
+    effPlots2.outputFile = outputFile
+    effPlots2.divideOption = "pois"
+    #effPlots2.rebin = 2
+    effPlots2.plot(0., 0.3)
+    efficiencyPlots.append(effPlots2)
 
 
 outputFile.Close()
