@@ -252,28 +252,41 @@ class EfficiencyPlots:
                 effPlot.name = self.name+"__"+individualName+"__"+var
                 effPlot.plotDir = self.plotDir+"/"+self.name+"/"+individualName
                 if self.publicationDir!="": effPlot.publicationDir = self.publicationDir+"/"+self.name+"/"+individualName
-                for inputFileName,system,selectionLevel,referenceLevel,plotInfo in zip(self.inputFileNames,self.systems,selectionLevels,referenceLevels,self.plotInfos):
-                    inputFile = ROOT.TFile.Open(inputFileName)
+                for inputFileNames,system,selectionLevel,referenceLevel,plotInfo in zip(self.inputFileNames,self.systems,selectionLevels,referenceLevels,self.plotInfos):
                     fvar = "_"+var
                     fselectionLevel = "_"+selectionLevel
                     fsystem = "_"+system if system!="" else ""
                     freferenceLevel = "_"+referenceLevel if referenceLevel!="" else ""
                     passHistoName = self.histoBaseName+fsystem+fselectionLevel+fvar
                     totalHistoName = self.histoBaseName+fsystem+freferenceLevel+fvar
-                    passHisto = inputFile.Get(passHistoName)
-                    if not passHisto:
-                        raise StandardError("Cannot find histo "+passHistoName+" in file "+inputFile.GetName())
-                    passHisto.__class__ = ROOT.TH1F
-                    passHisto.SetDirectory(0)
-                    if self.rebin>1: passHisto.Rebin(self.rebin)
-                    totalHisto = inputFile.Get(totalHistoName)
-                    if not totalHisto:
-                        raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
-                    totalHisto.__class__ = ROOT.TH1F
-                    totalHisto.SetDirectory(0)
-                    if self.rebin>1: totalHisto.Rebin(self.rebin)
                     #
-                    effPlot.efficiency(passHisto, totalHisto, self.divideOption, plotInfo)
+                    passHistoSum = None
+                    totalHistoSum = None
+                    inum = 0
+                    for inputFileName in inputFileNames:
+                        inputFile = ROOT.TFile.Open(inputFileName)
+                        passHisto = inputFile.Get(passHistoName)
+                        if not passHisto:
+                            raise StandardError("Cannot find histo "+passHistoName+" in file "+inputFile.GetName())
+                        passHisto.__class__ = ROOT.TH1F
+                        passHisto.SetDirectory(0)
+                        if self.rebin>1: passHisto.Rebin(self.rebin)
+                        totalHisto = inputFile.Get(totalHistoName)
+                        if not totalHisto:
+                            raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
+                        totalHisto.__class__ = ROOT.TH1F
+                        totalHisto.SetDirectory(0)
+                        if self.rebin>1: totalHisto.Rebin(self.rebin)
+                        #
+                        inputFile.Close()
+                        if not passHistoSum: passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
+                        else: passHistoSum.Add(passHisto)
+                        if not totalHistoSum: totalHistoSum = totalHisto.Clone('{0}_{1}_{2}'.format(totalHisto.GetName(), self.name, inum))
+                        else: totalHistoSum.Add(totalHisto)
+                        #
+                        inum+= 1
+                    #
+                    effPlot.efficiency(passHistoSum, totalHistoSum, self.divideOption, plotInfo)
                     effPlot.efficiencyGraphs[-1].SetName(self.name+fsystem+fselectionLevel+freferenceLevel+fvar)
                     inputFile.Close() 
                 effPlot.plot(minEff,maxEff)
@@ -289,7 +302,7 @@ class EfficiencyInBinsPlots:
         self.name = "efficiencies"
         self.divideOption = "cp" ##  Default: Clopper-Pearson interval 
         self.plotDir = "plots"
-        self.inputFileName = None
+        self.inputFileNames = None
         self.histoBaseName = "hTagAndProbe_TurnOn"
         self.selectionLevels = []
         self.referenceLevels = []
@@ -308,7 +321,6 @@ class EfficiencyInBinsPlots:
             self.variables.append(var)
 
     def plot(self, minEff=0.95, maxEff=1.01):
-        inputFile = ROOT.TFile.Open(self.inputFileName)
         for var in self.variables:
             for plotInfo in self.plotInfos:
                 plotInfo.xTitle = self.variableNames[var]
@@ -326,18 +338,33 @@ class EfficiencyInBinsPlots:
                     freferenceLevel = "_"+referenceLevel if referenceLevel!="" else ""
                     passHistoName = self.histoBaseName+fselectionLevel+fvar+fbin
                     totalHistoName = self.histoBaseName+freferenceLevel+fvar+fbin
-                    passHisto = inputFile.Get(passHistoName)
-                    if not passHisto:
-                        raise StandardError("Cannot find histo "+passHistoName+" in file "+inputFile.GetName())
-                    passHisto.__class__ = ROOT.TH1F
-                    passHisto.SetDirectory(0)
-                    totalHisto = inputFile.Get(totalHistoName)
-                    if not totalHisto:
-                        raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
-                    totalHisto.__class__ = ROOT.TH1F
-                    totalHisto.SetDirectory(0)
                     #
-                    effPlot.efficiency(passHisto, totalHisto, self.divideOption, plotInfo)
+                    passHistoSum = None
+                    totalHistoSum = None
+                    inum = 0
+                    for inputFileName in self.inputFileNames:
+                        inputFile = ROOT.TFile.Open(inputFileName)
+                        passHisto = inputFile.Get(passHistoName)
+                        if not passHisto:
+                            raise StandardError("Cannot find histo "+passHistoName+" in file "+inputFile.GetName())
+                        passHisto.__class__ = ROOT.TH1F
+                        passHisto.SetDirectory(0)
+                        totalHisto = inputFile.Get(totalHistoName)
+                        if not totalHisto:
+                            raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
+                        totalHisto.__class__ = ROOT.TH1F
+                        totalHisto.SetDirectory(0)
+                        #
+                        inputFile.Close()
+                        if not passHistoSum: passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
+                        else: passHistoSum.Add(passHisto)
+                        if not totalHistoSum: totalHistoSum = totalHisto.Clone('{0}_{1}_{2}'.format(totalHisto.GetName(), self.name, inum))
+                        else: totalHistoSum.Add(totalHisto)
+                        #
+                        inum+= 1
+                        inputFile.Close() 
+                    #
+                    effPlot.efficiency(passHistoSum, totalHistoSum, self.divideOption, plotInfo)
                     effPlot.efficiencyGraphs[-1].SetName(self.name+fselectionLevel+freferenceLevel+fvar+fbin)
                 effPlot.plot(minEff,maxEff)
                 self.plots.append(effPlot)
@@ -345,4 +372,3 @@ class EfficiencyInBinsPlots:
                 self.outputFile.cd()
                 for graph in effPlot.efficiencyGraphs:
                     graph.Write()
-        inputFile.Close() 

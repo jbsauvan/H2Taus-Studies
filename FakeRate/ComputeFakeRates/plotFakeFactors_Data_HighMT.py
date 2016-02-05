@@ -13,9 +13,12 @@ if publish:
         publish = False
 
 
-inputFileName = "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/QCD/v_2_2016-01-28/fakerates_MuTau_QCDSS_QCD.root"
+inputFileNames = [
+    "../../../Histos/StudyFakeRate/MuTau_FakeRateWJetsHighMT/Data_Run15D_v4/v_3_2016-01-29/fakerates_MuTau_WJetsHighMT_Data_Run15D_v4.root",
+    "../../../Histos/StudyFakeRate/MuTau_FakeRateWJetsHighMT/Data_Run15D_05Oct/v_3_2016-01-29/fakerates_MuTau_WJetsHighMT_Data_Run15D_05Oct.root",
+]
 plotDir = "plots/"
-name = "FakeFactors_QCDSS_1D"
+name = "FakeFactors_Data_HighMT_1D"
 systems = []
 systems.append("")
 
@@ -73,7 +76,7 @@ effPlots = EfficiencyPlots()
 effPlots.name = name
 effPlots.publicationDir = publicationDir
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileNames = [[inputFileName]]
+effPlots.inputFileNames = [inputFileNames]
 effPlots.systems = systems
 effPlots.selectionLevels = selectionLevels
 effPlots.plotInfos = plotInfos
@@ -89,7 +92,7 @@ effPlots = EfficiencyPlots()
 effPlots.name = name
 effPlots.publicationDir = publicationDir
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileNames = [[inputFileName]]
+effPlots.inputFileNames = [inputFileNames]
 effPlots.systems = systems
 effPlots.selectionLevels = selectionLevels2
 effPlots.plotInfos = plotInfos

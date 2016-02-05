@@ -91,7 +91,7 @@ class Efficiency2DPlots:
     def __init__(self):
         self.name = "efficiencies"
         self.plotDir = "plots"
-        self.inputFileName = None
+        self.inputFileNames = None
         self.histoBaseName = "hTagAndProbe_TurnOn"
         self.selectionLevels = []
         self.referenceLevels = []
@@ -108,7 +108,6 @@ class Efficiency2DPlots:
             self.variables.append(var)
 
     def plot(self, minEff=0.95, maxEff=1.01):
-        #self.inputFile = ROOT.TFile.Open(self.inputFileName)
         for var in self.variables:
             self.plotInfo.xTitle = self.variableNames[var][0]
             self.plotInfo.yTitle = self.variableNames[var][1]
@@ -116,22 +115,35 @@ class Efficiency2DPlots:
                 effPlot = Efficiency2DPlot()
                 effPlot.name = self.name+"__"+individualName+"__"+var
                 effPlot.plotDir = self.plotDir+"/"+self.name+"/"+individualName
-                inputFile = ROOT.TFile.Open(self.inputFileName)
                 fvar = "_"+var
                 fselectionLevel = "_"+selectionLevel
                 freferenceLevel = "_"+referenceLevel if referenceLevel!="" else ""
                 passHistoName = self.histoBaseName+fselectionLevel+fvar
                 totalHistoName = self.histoBaseName+freferenceLevel+fvar
-                passHisto = inputFile.Get(passHistoName)
-                if not passHisto:
-                    raise StandardError("Cannot find histo "+passHistoName+" in file "+inputFile.GetName())
-                passHisto.__class__ = ROOT.TH2F
-                passHisto.SetDirectory(0)
-                totalHisto = inputFile.Get(totalHistoName)
-                if not totalHisto:
-                    raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
-                totalHisto.__class__ = ROOT.TH2F
-                totalHisto.SetDirectory(0)
+                #
+                passHistoSum = None
+                totalHistoSum = None
+                inum = 0
+                for inputFileName in self.inputFileNames:
+                    inputFile = ROOT.TFile.Open(inputFileName)
+                    passHisto = inputFile.Get(passHistoName)
+                    if not passHisto:
+                        raise StandardError("Cannot find histo "+passHistoName+" in file "+inputFile.GetName())
+                    passHisto.__class__ = ROOT.TH2F
+                    passHisto.SetDirectory(0)
+                    totalHisto = inputFile.Get(totalHistoName)
+                    if not totalHisto:
+                        raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
+                    totalHisto.__class__ = ROOT.TH2F
+                    totalHisto.SetDirectory(0)
+                    #
+                    if not passHistoSum: passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
+                    else: passHistoSum.Add(passHisto)
+                    if not totalHistoSum: totalHistoSum = totalHisto.Clone('{0}_{1}_{2}'.format(totalHisto.GetName(), self.name, inum))
+                    else: totalHistoSum.Add(totalHisto)
+                    #
+                    inum+= 1
+                    inputFile.Close() 
                 #
                 effPlot.addEfficiency(passHisto, totalHisto, self.plotInfo)
                 effPlot.efficiency.SetName(self.name+fselectionLevel+freferenceLevel+fvar)

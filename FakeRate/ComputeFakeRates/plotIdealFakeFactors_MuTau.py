@@ -44,7 +44,7 @@ efficiencyPlots = []
 effPlots = EfficiencyPlots()
 effPlots.name = name
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileNames = [inputFileName]
+effPlots.inputFileNames = [[inputFileName]]
 effPlots.systems = systems
 effPlots.selectionLevels = selectionLevels
 effPlots.plotInfos = plotInfos
@@ -59,7 +59,7 @@ efficiencyPlots.append(effPlots)
 effPlots = EfficiencyPlots()
 effPlots.name = name
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileNames = [inputFileName]
+effPlots.inputFileNames = [[inputFileName]]
 effPlots.systems = systems
 effPlots.selectionLevels = selectionLevels
 effPlots.plotInfos = plotInfos

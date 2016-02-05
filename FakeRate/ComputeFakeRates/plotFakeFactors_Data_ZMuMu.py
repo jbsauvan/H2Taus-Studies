@@ -2,7 +2,7 @@ import ROOT
 import os
 from EfficiencyPlots import EfficiencyPlots, PlotInfo
 
-publish = False
+publish = False 
 publicationDir = ""
 if publish:
     if os.path.exists("/afs/cern.ch/user/j/jsauvan/www/"):
@@ -13,9 +13,13 @@ if publish:
         publish = False
 
 
-inputFileName = "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/QCD/v_2_2016-01-28/fakerates_MuTau_QCDSS_QCD.root"
+inputFileNames = [
+    "../../../Histos/StudyFakeRate/MuMu/Data_Run15D_05Oct/v_2_2016-01-28/fakerates_ZMuMu_Data_Run15D_05Oct.root",
+    "../../../Histos/StudyFakeRate/MuMu/Data_Run15D_v4/v_2_2016-01-28/fakerates_ZMuMu_Data_Run15D_v4.root",
+
+]
 plotDir = "plots/"
-name = "FakeFactors_QCDSS_1D"
+name = "FakeFactors_Data_ZMuMu_1D"
 systems = []
 systems.append("")
 
@@ -46,7 +50,7 @@ names2.append("IsoRaw_1_5_Vs_InvertIsoRaw_1_5")
 names2.append("Iso_Medium_Vs_InvertIso_Medium")
 names2.append("Iso_Medium_Vs_InvertIso_Medium_RawOnly")
 
-variables = ["tau_pt", "tau_eta", "tau_decayMode", "tau_pdgId", "nevents", "tau_jet_pt"]
+variables = ["tau_pt", "tau_eta", "tau_decayMode", "tau_pdgId", "nevents", "nvertices", "rho", "tau_jet_pt"]
 variableNames = {}
 variableNames["tau_pt"] = "p_{T}^{#tau} [GeV]"
 variableNames["tau_eta"] = "#eta^{#tau}"
@@ -73,7 +77,7 @@ effPlots = EfficiencyPlots()
 effPlots.name = name
 effPlots.publicationDir = publicationDir
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileNames = [[inputFileName]]
+effPlots.inputFileNames = [inputFileNames]
 effPlots.systems = systems
 effPlots.selectionLevels = selectionLevels
 effPlots.plotInfos = plotInfos
@@ -89,7 +93,7 @@ effPlots = EfficiencyPlots()
 effPlots.name = name
 effPlots.publicationDir = publicationDir
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileNames = [[inputFileName]]
+effPlots.inputFileNames = [inputFileNames]
 effPlots.systems = systems
 effPlots.selectionLevels = selectionLevels2
 effPlots.plotInfos = plotInfos

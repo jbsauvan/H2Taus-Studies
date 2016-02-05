@@ -63,7 +63,7 @@ for directory in directories:
     if effPlots.name=='': effPlots.name = 'Muon2PtCut_5'
     effPlots.publicationDir = publicationDir
     effPlots.histoBaseName = "{DIR}hFakeRate".format(DIR=directory)
-    effPlots.inputFileNames = [inputFileName]
+    effPlots.inputFileNames = [[inputFileName]]
     effPlots.systems = systems
     effPlots.selectionLevels = selectionLevels
     effPlots.plotInfos = plotInfos
@@ -122,7 +122,7 @@ for directory in directories:
     if effPlots2.name=='': effPlots2.name = 'Muon2PtCut_5'
     effPlots2.publicationDir = publicationDir
     effPlots2.histoBaseName = "{DIR}hFakeRate".format(DIR=directory)
-    effPlots2.inputFileNames = [inputFileName]*2
+    effPlots2.inputFileNames = [[inputFileName]]*2
     effPlots2.systems = systems2
     effPlots2.selectionLevels = selectionLevels2
     effPlots2.plotInfos = plotInfos2
