@@ -1,6 +1,8 @@
 import ROOT
 import os
 from EfficiencyPlots import EfficiencyPlots, EfficiencyInBinsPlots, PlotInfo
+from array import array
+import math
 
 publish = False
 publicationDir = ""
@@ -122,7 +124,7 @@ efficiencyPlots = []
 effPlots = EfficiencyInBinsPlots()
 effPlots.name = name
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileName = inputFileName
+effPlots.inputFileNames = [inputFileName]
 effPlots.selectionLevels = selectionLevels
 effPlots.plotInfos = plotInfos
 effPlots.referenceLevels = referenceLevels 
@@ -192,9 +194,58 @@ effPlots2.variables = variables
 effPlots2.variableNames = variableNames
 effPlots2.outputFile = outputFile
 effPlots2.divideOption = "pois"
-effPlots2.rebin = 2
+effPlots2.rebin = [0.,10.,20.,30.,40.,50.,60.,70.,200.]
 effPlots2.plot(0., 0.3)
 efficiencyPlots.append(effPlots2)
 
 
+def graphDivide(graph1, graph2):
+    x = []
+    y = []
+    xe = []
+    ye = []
+    for p in range(0, graph1.GetN()):
+        x.append(graph1.GetX()[p])
+        xe.append((graph1.GetEXlow()[p]+graph1.GetEXhigh()[p])/2.)
+        y1p = graph1.GetY()[p]
+        y2p = graph2.GetY()[p]
+        ye1p = (graph1.GetEYlow()[p]+graph1.GetEYhigh()[p])/2.
+        ye2p = (graph2.GetEYlow()[p]+graph2.GetEYhigh()[p])/2.
+        if y2p!=0. and y2p**2!=0.:
+            y.append(y1p / y2p)
+            ye.append(math.sqrt( (ye1p/y2p)**2 + (ye2p*y1p/y2p**2)**2 ))
+        else:
+            y.append(0.)
+            ye.append(0.)
+    print y
+    graph = ROOT.TGraphAsymmErrors(len(x), array('d',x), array('d',y), array('d',xe), array('d',xe), array('d',ye), array('d',ye))
+    graph.SetName(graph1.GetName()+"_div")
+    return graph
+
+outputFileCorr = ROOT.TFile.Open(plotDir+"/"+name+"/"+name+"_highMTCorrections.root", "RECREATE")
+
+fakeFactorVsMT = outputFile.Get('FakeFactors_WJets_Iso_Medium_OS_InvertIso_Medium_OS_mt')
+highMTFactor = fakeFactorVsMT.GetY()[fakeFactorVsMT.GetN()-1]
+highMTFactorErrorLow = fakeFactorVsMT.GetEYlow()[fakeFactorVsMT.GetN()-1]
+highMTFactorErrorHigh = fakeFactorVsMT.GetEYhigh()[fakeFactorVsMT.GetN()-1]
+xs = []
+xslow = []
+xshigh = []
+ys = []
+yslow = []
+yshigh = []
+for p in xrange(fakeFactorVsMT.GetN()):
+    xs.append(fakeFactorVsMT.GetX()[p])
+    xslow.append(fakeFactorVsMT.GetEXlow()[p])
+    xshigh.append(fakeFactorVsMT.GetEXhigh()[p])
+    ys.append(highMTFactor)
+    yslow.append(highMTFactorErrorLow)
+    yshigh.append(highMTFactorErrorHigh)
+highMTGraph = ROOT.TGraphAsymmErrors(len(xs), array('d',xs), array('d',ys), array('d',xslow), array('d',xshigh), array('d',yslow), array('d',yshigh))
+correctionGraph = graphDivide(fakeFactorVsMT, highMTGraph)
+correctionGraph.SetPointEYlow(correctionGraph.GetN()-1, 0)
+correctionGraph.SetPointEYhigh(correctionGraph.GetN()-1, 0)
+correctionGraph.SetName('HighMTCorrection_WJets_Iso_Medium_OS_InvertIso_Medium_OS_mt')
+correctionGraph.Write()
 outputFile.Close()
+outputFileCorr.Close()

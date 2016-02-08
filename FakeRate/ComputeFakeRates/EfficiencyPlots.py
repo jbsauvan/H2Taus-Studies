@@ -1,5 +1,6 @@
 import ROOT
 import os
+import array
 
 
 def setPlotStyle():
@@ -53,6 +54,7 @@ class EfficiencyPlot:
         self.passHistos = []
         self.totalHistos = []
         self.efficiencyGraphs = []
+        self.efficiencyHistos = []
         self.canvas = None
         self.drawLegend = False
         self.legendPosition = [0.6, 0.7, 0.95, 0.9]
@@ -62,10 +64,27 @@ class EfficiencyPlot:
         self.passHistos.append(pas)
         self.totalHistos.append(total)
         self.efficiencyGraphs.append(ROOT.TGraphAsymmErrors())
-        self.efficiencyGraphs[-1].Divide(pas,total, option) 
+        self.efficiencyGraphs[-1].Divide(pas,total, option)
         self.efficiencyGraphs[-1].SetMarkerStyle(plotInfo.markerStyle)
         self.efficiencyGraphs[-1].SetMarkerColor(plotInfo.markerColor)
         self.efficiencyGraphs[-1].SetLineColor(plotInfo.lineColor)
+        self.efficiencyHistos.append(pas.Clone())
+        p = 0
+        for b in xrange(1,pas.GetNbinsX()+1):
+            if total.GetBinContent(b)==0:
+                self.efficiencyHistos[-1].SetBinContent(b, 0)
+                self.efficiencyHistos[-1].SetBinError(b, 0)
+                continue
+            eff = self.efficiencyGraphs[-1].GetY()[p]
+            eup = self.efficiencyGraphs[-1].GetEYhigh()[p]
+            edown = self.efficiencyGraphs[-1].GetEYlow()[p]
+            error = (eup+edown)/2.
+            self.efficiencyHistos[-1].SetBinContent(b, eff)
+            self.efficiencyHistos[-1].SetBinError(b, error)
+            p += 1
+        ## Fill under/over-flows
+        self.efficiencyHistos[-1].SetBinContent(0, self.efficiencyHistos[-1].GetBinContent(1))
+        self.efficiencyHistos[-1].SetBinContent(pas.GetNbinsX()+1, self.efficiencyHistos[-1].GetBinContent(pas.GetNbinsX()))
         self.plotInfos.append(plotInfo)
 
     def addGraph(self, graph, plotInfo):
@@ -117,7 +136,7 @@ class EfficiencyPlot:
 class DataMCEfficiencyPlot:
     def __init__(self):
         self.name = 'efficiencies'
-        self.divideOption = "cp" ##  Default: Clopper-Pearson interval 
+        self.divideOption = "cp" ##  Default: Clopper-Pearson interval
         self.rebin = 1
         self.plotDir = "plots"
         self.selectionHistoName = ''
@@ -192,7 +211,7 @@ class DataMCEfficiencyPlot:
             if not mcTotalHisto: mcTotalHisto = totalHisto.Clone('{0}_{1}_MC_{2}'.format(totalHisto.GetName(), self.name, imc))
             else: mcTotalHisto.Add(totalHisto)
             #
-            if imc==0 and self.referenceMC: 
+            if imc==0 and self.referenceMC:
                 refPassHisto = passHisto.Clone('{0}_{1}_Ref'.format(passHisto.GetName(), self.name))
                 refTotalHisto = totalHisto.Clone('{0}_{1}_Ref'.format(totalHisto.GetName(), self.name))
             imc += 1
@@ -220,7 +239,7 @@ class DataMCEfficiencyPlot:
 class EfficiencyPlots:
     def __init__(self):
         self.name = "efficiencies"
-        self.divideOption = "cp" ##  Default: Clopper-Pearson interval 
+        self.divideOption = "cp" ##  Default: Clopper-Pearson interval
         self.rebin = 1
         self.plotDir = "plots"
         self.publicationDir = ""
@@ -270,13 +289,21 @@ class EfficiencyPlots:
                             raise StandardError("Cannot find histo "+passHistoName+" in file "+inputFile.GetName())
                         passHisto.__class__ = ROOT.TH1F
                         passHisto.SetDirectory(0)
-                        if self.rebin>1: passHisto.Rebin(self.rebin)
+                        if self.rebin.__class__==list: 
+                            passHisto = passHisto.Rebin(len(self.rebin)-1, passHisto.GetName()+'_rebin', array.array('d',self.rebin))
+                            passHisto.__class__ = ROOT.TH1F
+                            passHisto.SetDirectory(0)
+                        elif self.rebin>1: passHisto.Rebin(self.rebin)
                         totalHisto = inputFile.Get(totalHistoName)
                         if not totalHisto:
                             raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
                         totalHisto.__class__ = ROOT.TH1F
                         totalHisto.SetDirectory(0)
-                        if self.rebin>1: totalHisto.Rebin(self.rebin)
+                        if self.rebin.__class__==list: 
+                            totalHisto = totalHisto.Rebin(len(self.rebin)-1, totalHisto.GetName()+'_rebin', array.array('d',self.rebin))
+                            totalHisto.__class__ = ROOT.TH1F
+                            totalHisto.SetDirectory(0)
+                        elif self.rebin>1: totalHisto.Rebin(self.rebin)
                         #
                         inputFile.Close()
                         if not passHistoSum: passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
@@ -288,7 +315,7 @@ class EfficiencyPlots:
                     #
                     effPlot.efficiency(passHistoSum, totalHistoSum, self.divideOption, plotInfo)
                     effPlot.efficiencyGraphs[-1].SetName(self.name+fsystem+fselectionLevel+freferenceLevel+fvar)
-                    inputFile.Close() 
+                    inputFile.Close()
                 effPlot.plot(minEff,maxEff)
                 self.plots.append(effPlot)
                 ## Store efficiencies in output ROOT file
@@ -300,7 +327,7 @@ class EfficiencyPlots:
 class EfficiencyInBinsPlots:
     def __init__(self):
         self.name = "efficiencies"
-        self.divideOption = "cp" ##  Default: Clopper-Pearson interval 
+        self.divideOption = "cp" ##  Default: Clopper-Pearson interval
         self.plotDir = "plots"
         self.inputFileNames = None
         self.histoBaseName = "hTagAndProbe_TurnOn"
@@ -362,7 +389,7 @@ class EfficiencyInBinsPlots:
                         else: totalHistoSum.Add(totalHisto)
                         #
                         inum+= 1
-                        inputFile.Close() 
+                        inputFile.Close()
                     #
                     effPlot.efficiency(passHistoSum, totalHistoSum, self.divideOption, plotInfo)
                     effPlot.efficiencyGraphs[-1].SetName(self.name+fselectionLevel+freferenceLevel+fvar+fbin)
