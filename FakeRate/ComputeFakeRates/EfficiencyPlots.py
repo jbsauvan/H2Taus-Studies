@@ -69,6 +69,8 @@ class EfficiencyPlot:
         self.efficiencyGraphs[-1].SetMarkerColor(plotInfo.markerColor)
         self.efficiencyGraphs[-1].SetLineColor(plotInfo.lineColor)
         self.efficiencyHistos.append(pas.Clone())
+        self.efficiencyHistos[-1].__class__ = ROOT.TH1F
+        self.efficiencyHistos[-1].SetDirectory(0)
         p = 0
         for b in xrange(1,pas.GetNbinsX()+1):
             if total.GetBinContent(b)==0:
