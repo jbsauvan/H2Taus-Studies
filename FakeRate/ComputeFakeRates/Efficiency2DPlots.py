@@ -43,6 +43,7 @@ class PlotInfo:
 
 class Efficiency2DPlot:
     def __init__(self):
+        setPlotStyle()
         self.name = "efficiency"
         self.plotDir = "plots/"
         self.passHisto = None
@@ -73,9 +74,9 @@ class Efficiency2DPlot:
         self.canvas = ROOT.TCanvas("c_"+self.name, "c_"+self.name, 800, 800)
 
         #hDummy = ROOT.TH2F("hDummy", "dummy", 1, xMin, xMax, 1, yMin, yMax)
-        #hDummy.SetXTitle(self.plotInfo.xTitle)
-        #hDummy.SetYTitle(self.plotInfo.yTitle)
         #hDummy.Draw()
+        self.efficiency.SetXTitle(self.plotInfo.xTitle)
+        self.efficiency.SetYTitle(self.plotInfo.yTitle)
         self.efficiency.SetAxisRange(minEff, maxEff, "Z")
         self.efficiency.Draw("COLZ")
         #self.efficiencyGraph.Draw("TRI2")

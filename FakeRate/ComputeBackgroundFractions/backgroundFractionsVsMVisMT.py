@@ -80,6 +80,10 @@ global_selections = [
 backgrounds = ['VV', 'TT', 'QCD', 'W', 'ZJ']
 
 
+plotInfo = PlotInfo()
+plotInfo.xTitle = 'm_{vis} [GeV]'
+plotInfo.yTitle = 'm_{T} [GeV]'
+
 # Loop on variables
 for variable in variables:
     # Loop on global selections
@@ -135,7 +139,7 @@ for variable in variables:
             plot = Efficiency2DPlot()
             plot.name = "backgroundFraction_{SEL}_{VAR}_{BACK}".format(SEL=global_selection.format(SIGN=''),VAR=variable.name,BACK=background)
             plot.plotDir = "results/"
-            plot.addEfficiency(histo, histo_total, PlotInfo())
+            plot.addEfficiency(histo, histo_total, plotInfo)
             plot.plot(0, 1)
             plots.append(plot)
 

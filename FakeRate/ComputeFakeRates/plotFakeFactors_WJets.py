@@ -199,6 +199,11 @@ effPlots2.plot(0., 0.3)
 efficiencyPlots.append(effPlots2)
 
 
+
+########################################################
+## Compute corrections for mT>70GeV corrections
+
+
 def graphDivide(graph1, graph2):
     x = []
     y = []
@@ -247,5 +252,21 @@ correctionGraph.SetPointEYlow(correctionGraph.GetN()-1, 0)
 correctionGraph.SetPointEYhigh(correctionGraph.GetN()-1, 0)
 correctionGraph.SetName('HighMTCorrection_WJets_Iso_Medium_OS_InvertIso_Medium_OS_mt')
 correctionGraph.Write()
+
+canvas = ROOT.TCanvas('canvas', 'canvas', 800, 800)
+hDummy = ROOT.TH1F('hDummy', 'hDummy', 1, 0, 200)
+corrs = correctionGraph.GetY()
+corrs.SetSize(correctionGraph.GetN())
+maxi = max(corrs)*1.1
+mini = 0
+hDummy.SetAxisRange(mini,maxi)
+hDummy.SetXTitle('m_{T} [GeV]')
+hDummy.SetYTitle('Correction')
+hDummy.Draw()
+correctionGraph.SetMarkerStyle(20)
+correctionGraph.Draw('p same')
+canvas.Print(plotDir+"/"+name+"/"+name+"_highMTCorrections.png")
+
+
 outputFile.Close()
 outputFileCorr.Close()
