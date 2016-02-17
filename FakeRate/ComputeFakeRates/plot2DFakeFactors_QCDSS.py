@@ -4,7 +4,7 @@ from Efficiency2DPlots import Efficiency2DPlots, PlotInfo
 
 
 
-inputFileName = "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/QCD/v_2_2016-01-28/fakerates_MuTau_QCDSS_QCD.root"
+inputFileName = "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/QCD/v_3_2016-02-17/fakerates_MuTau_QCDSS_QCD.root"
 plotDir = "plots/"
 name = "FakeFactors_QCDSS_2D"
 
@@ -60,7 +60,7 @@ efficiencyPlots = []
 effPlots = Efficiency2DPlots()
 effPlots.name = name
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileName = inputFileName
+effPlots.inputFileNames = [inputFileName]
 effPlots.selectionLevels = selectionLevels
 effPlots.plotInfo = plotInfo
 effPlots.referenceLevels = referenceLevels 
@@ -74,7 +74,7 @@ efficiencyPlots.append(effPlots)
 effPlots = Efficiency2DPlots()
 effPlots.name = name
 effPlots.histoBaseName = "hFakeRate"
-effPlots.inputFileName = inputFileName
+effPlots.inputFileNames = [inputFileName]
 effPlots.selectionLevels = selectionLevels2
 effPlots.plotInfo = plotInfo
 effPlots.referenceLevels = referenceLevels2 

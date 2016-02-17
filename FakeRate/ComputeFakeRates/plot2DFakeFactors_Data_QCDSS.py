@@ -5,8 +5,8 @@ from Efficiency2DPlots import Efficiency2DPlots, PlotInfo
 
 
 inputFileNames = [
-    "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/Data_Run15D_v4/v_2_2016-01-28/fakerates_MuTau_QCDSS_Data_Run15D_v4.root",
-    "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/Data_Run15D_05Oct/v_2_2016-01-28/fakerates_MuTau_QCDSS_Data_Run15D_05Oct.root",
+    "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/Data_Run15D_v4/v_3_2016-02-17/fakerates_MuTau_QCDSS_Data_Run15D_v4.root",
+    "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/Data_Run15D_05Oct/v_3_2016-02-17/fakerates_MuTau_QCDSS_Data_Run15D_05Oct.root",
 ]
 plotDir = "plots/"
 name = "FakeFactors_Data_QCDSS_2D"

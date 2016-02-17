@@ -7,7 +7,7 @@ from CMGTools.H2TauTau.proto.plotter.HistCreator import setSumWeights
 
 
 inputDirectory = '../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/'
-version = 'v_2_2016-01-28'
+version = 'v_3_2016-02-17'
 fileNameTemplate = 'fakerates_MuTau_QCDSS_{SAMPLE}.root'
 
 dataSamples = [
