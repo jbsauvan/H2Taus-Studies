@@ -5,6 +5,96 @@ import numpy as np
 from root_numpy import root2array
 from rootpy.plotting import Hist
 import rootpy
+import math
+
+
+def createSmoothingWeightsFromErrors(histo):
+    histoWeights = histo.Clone(histo.GetName()+"_weights")
+    histoWeights.__class__ = ROOT.TH1F
+    histoWeights.SetDirectory(0)
+    weights = []
+    for b in xrange(1,histo.GetNbinsX()+1):
+        weight = 0.
+        if histo.GetBinError(b)>0.:
+            weight = 1./(histo.GetBinError(b)**2)
+        weights.append(weight)
+    sumWeights = sum(weights)
+    for b in range(1,histo.GetNbinsX()+1):
+        histoWeights.SetBinContent(b,weights[b-1]/sumWeights)
+        histoWeights.SetBinError(b,0.)
+    return histoWeights
+
+class Smoother:
+    def __init__(self):
+        self.histo = None
+        self.weights = None
+        self.smoothHisto = None
+        self.logScale = False
+        self.gausWidth = 1.
+
+    def getSmoothedValue(self, x):
+        if self.logScale and x<=0.:
+            raise StandardError("ERROR: use log scale and x<=0.")
+        sumw = 0.
+        sumwy = 0.
+        nbins = self.histo.GetNbinsX()
+        for b in range(1,nbins+1):
+            xi = self.histo.GetXaxis().GetBinCenter(b)
+            yi = self.histo.GetBinContent(b)
+            if self.logScale and xi<=0.:
+                raise StandardError("ERROR: use log scale and xi<=0.")
+            dx = 0.
+            if self.logScale:
+                dx = (math.log(x) - math.log(xi))/self.gausWidth
+            else:
+                dx = (x-xi)/self.gausWidth
+            wi = ROOT.TMath.Gaus(dx)
+            if self.weights:
+                wi *= self.weights.GetBinContent(b)
+            sumw += wi
+            sumwy += wi*yi
+        value = 0.
+        if sumw>0.:
+            value = sumwy/sumw
+        return value
+
+    def computeSmoothHisto(self):
+        if not self.histo:
+            raise StandardError("ERROR: non existing input histo")
+        self.smoothHisto = self.histo.Clone(self.histo.GetName()+"_smooth")
+        self.smoothHisto.__class__ = ROOT.TH1D
+        self.smoothHisto.SetDirectory(0)
+        nbins = self.smoothHisto.GetNbinsX()
+        for b in range(1,nbins+1):
+            x = self.smoothHisto.GetBinCenter(b)
+            smoothedValue = self.getSmoothedValue(x)
+            self.smoothHisto.SetBinContent(b,smoothedValue)
+
+    def getContinuousSmoothHisto(self):
+        if not self.histo:
+            raise StandardError("ERROR: non existing input histo")
+        mini = self.histo.GetXaxis().GetBinLowEdge(1)
+        maxi = self.histo.GetXaxis().GetBinUpEdge(self.histo.GetNbinsX())
+        if self.logScale and mini<0.:
+            raise StandardError("ERROR: use log scale and min value<0")
+        if mini==0.:
+            mini = self.histo.GetXaxis().GetBinUpEdge(1)/10.
+        nbins = 1000
+        bins = []
+        if self.logScale:
+            dx = (math.log(maxi) - math.log(mini))/nbins
+            bins = [math.exp(math.log(mini)+i*dx) for i in range(0,nbins+1)]
+        else:
+            dx = (maxi - mini)/nbins
+            bins = [mini+i*dx for i in range(0,nbins+1)]
+        smoothHisto = ROOT.TH1D(self.histo.GetName()+"_cont",self.histo.GetTitle(), nbins, array('f',bins))
+        for b in range(1,nbins+1):
+            x = smoothHisto.GetBinCenter(b)
+            smoothedValue = self.getSmoothedValue(x)
+            smoothHisto.SetBinContent(b,smoothedValue)
+        return smoothHisto
+
+
 
 
 class Closure:
@@ -52,7 +142,7 @@ class Closure:
         histo.Scale(1,'width')
         self.data[name]['Histo'] = histo
 
-    def computeDiff(self, name1, name2, type):
+    def computeDiff(self, name1, name2, type, smoothWidth=0.2, smoothLog=True):
         if not name1 in self.data or not type in self.data[name1]:
             raise StandardError('Cannot find {TYPE} for {NAME}'.format(TYPE=type,NAME=name1))
         if not name2 in self.data or not type in self.data[name2]:
@@ -78,8 +168,16 @@ class Closure:
             histodiff = histo2 - histo1
             if not'{1}-{0}'.format(name1,name2) in self.data: self.data['{1}-{0}'.format(name1,name2)] = {}
             self.data['{1}-{0}'.format(name1,name2)][type] = histodiff
+            ## Smooth diff histo
+            smoother = Smoother()
+            smoother.logScale = smoothLog
+            smoother.gausWidth = smoothWidth
+            smoother.histo = histodiff
+            smoother.weights = createSmoothingWeightsFromErrors(histodiff)
+            smoother.computeSmoothHisto()
+            self.data['{1}-{0}'.format(name1,name2)][type+'_Smooth'] = smoother.getContinuousSmoothHisto()
 
-    def computeRatio(self, name1, name2, type):
+    def computeRatio(self, name1, name2, type, smoothWidth=0.2, smoothLog=True):
         if not name1 in self.data or not type in self.data[name1]:
             raise StandardError('Cannot find {TYPE} for {NAME}'.format(TYPE=type,NAME=name1))
         if not name2 in self.data or not type in self.data[name2]:
@@ -108,9 +206,18 @@ class Closure:
         elif isinstance(self.data[name1][type], ROOT.TH1F):
             histo1 = self.data[name1][type]
             histo2 = self.data[name2][type]
-            histodiff = histo2 / histo1
+            historatio = histo2 / histo1
             if not'{1}/{0}'.format(name1,name2) in self.data: self.data['{1}/{0}'.format(name1,name2)] = {}
-            self.data['{1}/{0}'.format(name1,name2)][type] = histodiff
+            self.data['{1}/{0}'.format(name1,name2)][type] = historatio
+            ## Smooth ratio histo
+            smoother = Smoother()
+            smoother.logScale = smoothLog
+            smoother.gausWidth = smoothWidth
+            smoother.histo = historatio
+            smoother.weights = createSmoothingWeightsFromErrors(historatio)
+            smoother.computeSmoothHisto()
+            self.data['{1}/{0}'.format(name1,name2)][type+'_Smooth'] = smoother.getContinuousSmoothHisto()
+
 
 
 

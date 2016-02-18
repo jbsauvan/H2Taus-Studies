@@ -10,8 +10,16 @@ closure_inputs = {
         'TreeTrue':'ntFakeRate_MT40_Iso_Medium_tree',
         'TreeEst':'Weight_HighMT_Iso_Medium_VsPtDecay/ntFakeRate_MT40_InvertIso_Medium_tree',
     },
+    #'QCDSS':{
+        #'File':'/home/sauvan/Documents/HEP/Projects/CMS/Htautau_Run2/Histos/StudyFakeRate/MuTau/AllFakeFactors/QCD/v_5_2016-02-10/fakerates_MuTau_QCD.root',
+        #'TreeTrue':'ntFakeRate_MT40_Iso_Medium_tree',
+        #'TreeEst':'Weight_QCDSS_Iso_Medium_VsPtDecay/ntFakeRate_MT40_InvertIso_Medium_tree',
+    #},
     'QCDSS':{
-        'File':'/home/sauvan/Documents/HEP/Projects/CMS/Htautau_Run2/Histos/StudyFakeRate/MuTau/AllFakeFactors/QCD/v_5_2016-02-10/fakerates_MuTau_QCD.root',
+        'File':[
+            '/home/sauvan/Documents/HEP/Projects/CMS/Htautau_Run2/Histos/StudyFakeRate/MuTau/QCDFakeFactorClosure/Data_Run15D_v4/v_1_2016-02-17/fakerates_MuTau_Data_Run15D_v4.root',
+            '/home/sauvan/Documents/HEP/Projects/CMS/Htautau_Run2/Histos/StudyFakeRate/MuTau/QCDFakeFactorClosure/Data_Run15D_05Oct/v_1_2016-02-17/fakerates_MuTau_Data_Run15D_05Oct.root',
+        ],
         'TreeTrue':'ntFakeRate_MT40_Iso_Medium_tree',
         'TreeEst':'Weight_QCDSS_Iso_Medium_VsPtDecay/ntFakeRate_MT40_InvertIso_Medium_tree',
     },
@@ -53,8 +61,10 @@ for fakeType,inputs in closure_inputs.items():
 
     graphDiff = closure.data['Est-True']['TKDE']
     histoDiff = closure.data['Est-True']['Histo']
+    histoSmoothDiff = closure.data['Est-True']['Histo_Smooth']
     graphRatio = closure.data['True/Est']['TKDE']
     histoRatio = closure.data['True/Est']['Histo']
+    histoSmoothRatio = closure.data['True/Est']['Histo_Smooth']
 
 
     histoDummy = Hist(1, 0, 250, type='F')
@@ -91,6 +101,7 @@ for fakeType,inputs in closure_inputs.items():
     histoEst.Draw('same')
     graphDiff.Draw('same')
     histoDiff.Draw('same')
+    histoSmoothDiff.Draw('hist same')
     canvas.Print('results/{FAKETYPE}_NonClosure.png'.format(FAKETYPE=fakeType))
     #
     output_file.cd()
@@ -102,7 +113,9 @@ for fakeType,inputs in closure_inputs.items():
     histoTrue.SetName('{FAKETYPE}_Histo_True'.format(FAKETYPE=fakeType))
     histoEst.SetName('{FAKETYPE}_Histo_Est'.format(FAKETYPE=fakeType))
     histoDiff.SetName('{FAKETYPE}_Histo_Diff'.format(FAKETYPE=fakeType))
+    histoSmoothDiff.SetName('{FAKETYPE}_Histo_Smooth_Diff'.format(FAKETYPE=fakeType))
     histoRatio.SetName('{FAKETYPE}_Histo_Ratio'.format(FAKETYPE=fakeType))
+    histoSmoothRatio.SetName('{FAKETYPE}_Histo_Smooth_Ratio'.format(FAKETYPE=fakeType))
     graphTrue.Write()
     graphEst.Write()
     graphDiff.Write()
@@ -110,7 +123,9 @@ for fakeType,inputs in closure_inputs.items():
     histoTrue.Write()
     histoEst.Write()
     histoDiff.Write()
+    histoSmoothDiff.Write()
     histoRatio.Write()
+    histoSmoothRatio.Write()
     #
     output_data.append(graphTrue)
     output_data.append(graphEst)
@@ -119,7 +134,9 @@ for fakeType,inputs in closure_inputs.items():
     output_data.append(histoTrue)
     output_data.append(histoEst)
     output_data.append(histoDiff)
+    output_data.append(histoSmoothDiff)
     output_data.append(histoRatio)
+    output_data.append(histoSmoothRatio)
 
 
 output_file.Close()
