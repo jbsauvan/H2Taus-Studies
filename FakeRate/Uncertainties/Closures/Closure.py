@@ -6,7 +6,57 @@ from root_numpy import root2array
 from rootpy.plotting import Hist
 import rootpy
 import math
+import copy
 
+
+
+def weighted_quantile(values, quantiles, sample_weight=None, values_sorted=False, old_style=False):
+    """ Very close to numpy.percentile, but supports weights.
+    NOTE: quantiles should be in [0, 1]!
+    :param values: numpy.array with data
+    :param quantiles: array-like with many quantiles needed
+    :param sample_weight: array-like of the same length as `array`
+    :param values_sorted: bool, if True, then will avoid sorting of initial array
+    :param old_style: if True, will correct output to be consistent with numpy.percentile.
+    :return: numpy.array with computed quantiles.
+    """
+    #values = np.array(values)
+    quantiles = np.array(quantiles)
+    if sample_weight is None:
+        sample_weight = np.ones(len(values))
+    #sample_weight = np.array(sample_weight)
+    assert np.all(quantiles >= 0) and np.all(quantiles <= 1), 'quantiles should be in [0, 1]'
+
+    if not values_sorted:
+        sorter = np.argsort(values)
+        values = values[sorter]
+        sample_weight = sample_weight[sorter]
+
+    weighted_quantiles = np.cumsum(sample_weight) - 0.5 * sample_weight
+    if old_style:
+        # To be convenient with numpy.percentile
+        weighted_quantiles -= weighted_quantiles[0]
+        weighted_quantiles /= weighted_quantiles[-1]
+    else:
+        weighted_quantiles /= np.sum(sample_weight)
+    return np.interp(quantiles, weighted_quantiles, values)
+
+#def createSmoothingWeightsFromErrors(histo1, histo2):
+    #histoWeights = histo1.Clone(histo1.GetName()+"_weights")
+    #histoWeights.__class__ = ROOT.TH1F
+    #histoWeights.SetDirectory(0)
+    #weights = []
+    #for b in xrange(1,histo1.GetNbinsX()+1):
+        #weight = 0.
+        #relerr1 = histo1.GetBinError(b)/histo1.GetBinContent(b) if histo1.GetBinContent(b)>0. else 1.
+        #relerr2 = histo2.GetBinError(b)/histo2.GetBinContent(b) if histo2.GetBinContent(b)>0. else 1.
+        #weight = 1./(max(relerr1, relerr2)**2)
+        #weights.append(weight)
+    #sumWeights = sum(weights)
+    #for b in range(1,histo1.GetNbinsX()+1):
+        #histoWeights.SetBinContent(b,weights[b-1]/sumWeights)
+        #histoWeights.SetBinError(b,0.)
+    #return histoWeights
 
 def createSmoothingWeightsFromErrors(histo):
     histoWeights = histo.Clone(histo.GetName()+"_weights")
@@ -29,25 +79,19 @@ class Smoother:
         self.histo = None
         self.weights = None
         self.smoothHisto = None
-        self.logScale = False
+        self.rescaling = lambda x:x
+        self.invertRescaling = self.rescaling
         self.gausWidth = 1.
 
     def getSmoothedValue(self, x):
-        if self.logScale and x<=0.:
-            raise StandardError("ERROR: use log scale and x<=0.")
         sumw = 0.
         sumwy = 0.
         nbins = self.histo.GetNbinsX()
         for b in range(1,nbins+1):
             xi = self.histo.GetXaxis().GetBinCenter(b)
             yi = self.histo.GetBinContent(b)
-            if self.logScale and xi<=0.:
-                raise StandardError("ERROR: use log scale and xi<=0.")
             dx = 0.
-            if self.logScale:
-                dx = (math.log(x) - math.log(xi))/self.gausWidth
-            else:
-                dx = (x-xi)/self.gausWidth
+            dx = (self.rescaling(x)-self.rescaling(xi))/self.gausWidth
             wi = ROOT.TMath.Gaus(dx)
             if self.weights:
                 wi *= self.weights.GetBinContent(b)
@@ -75,39 +119,41 @@ class Smoother:
             raise StandardError("ERROR: non existing input histo")
         mini = self.histo.GetXaxis().GetBinLowEdge(1)
         maxi = self.histo.GetXaxis().GetBinUpEdge(self.histo.GetNbinsX())
-        if self.logScale and mini<0.:
-            raise StandardError("ERROR: use log scale and min value<0")
         if mini==0.:
             mini = self.histo.GetXaxis().GetBinUpEdge(1)/10.
         nbins = 1000
         bins = []
-        if self.logScale:
-            dx = (math.log(maxi) - math.log(mini))/nbins
-            bins = [math.exp(math.log(mini)+i*dx) for i in range(0,nbins+1)]
-        else:
-            dx = (maxi - mini)/nbins
-            bins = [mini+i*dx for i in range(0,nbins+1)]
-        smoothHisto = ROOT.TH1D(self.histo.GetName()+"_cont",self.histo.GetTitle(), nbins, array('f',bins))
-        for b in range(1,nbins+1):
-            x = smoothHisto.GetBinCenter(b)
-            smoothedValue = self.getSmoothedValue(x)
-            smoothHisto.SetBinContent(b,smoothedValue)
-        return smoothHisto
+        dx = (self.rescaling(maxi) - self.rescaling(mini))/nbins
+        bins = [self.invertRescaling(self.rescaling(mini)+i*dx) for i in range(0,nbins+1)]
+        xs = [(x1+x2)/2 for x1,x2 in zip(bins[:-1],bins[1:])]
+        ys = [self.getSmoothedValue(x) for x in xs]
+        smoothGraph = ROOT.TGraphAsymmErrors(len(xs), array('f',xs), array('f',ys), array('f',[0]*len(xs)), array('f',[0]*len(xs)), array('f',[0]*len(xs)), array('f',[0]*len(xs)))
+        return smoothGraph
 
 
 
 
 class Closure:
     def __init__(self):
+        self.weights = False
         self.data = {}
 
-    def fillData(self, name, input_file, tree, var, weight=None):
-        branches = [var] 
-        if weight: branches.append(weight)
-        data = root2array(input_file, tree, branches=branches)
-        points = data.view((np.float64, len(data.dtype.names)))
-        values = points[:,0] if weight else points
-        weights = points[:,1] if weight else None
+    def fillData(self, name, input_files, tree, var, weight=None, global_weights=None):
+        all_points = None
+        for input_file,global_weight in zip(input_files,global_weights):
+            branches = [var] 
+            total_weight = copy.copy(weight) if weight else '1'
+            if global_weight!=1:
+                total_weight += '*{}'.format(global_weight)
+            if total_weight!=1:
+                branches.append(total_weight)
+                self.weights = True
+            data = root2array(input_file, tree, branches=branches)
+            points = data.view((np.float64, len(data.dtype.names)))
+            if all_points==None: all_points = points
+            else: all_points = np.vstack((all_points, points))
+        values = all_points[:,0] if self.weights else points
+        weights = all_points[:,1] if self.weights else None
         if not name in self.data: self.data[name] = {}
         self.data[name]['Data'] = [values, weights]
 
@@ -119,25 +165,39 @@ class Closure:
                 data['Data'] = None
 
 
-    def computeTKDE(self, name):
+    def computeTKDE(self, name, min=1., max=0.):
         if not name in self.data or not 'Data' in self.data[name]:
             raise StandardError('Cannot find data for {NAME}'.format(NAME=name))
         values = self.data[name]['Data'][0]
         weights = self.data[name]['Data'][1]
         sumofweights = weights.sum() if isinstance(weights,np.ndarray) else len(values)
         kde = ROOT.TKDE(len(values), array('d',values), array('d',weights)) if isinstance(weights,np.ndarray) else ROOT.TKDE(len(values), array('d',values))
-        graph = kde.GetGraphWithErrors(500)
+        graph = kde.GetGraphWithErrors(500, min, max)
         for p in xrange(graph.GetN()):
             graph.SetPoint(p, graph.GetX()[p], graph.GetY()[p]*sumofweights)
             graph.SetPointError(p, graph.GetEX()[p], graph.GetEY()[p]*sumofweights)
         self.data[name]['TKDE'] = graph
 
-    def computeHisto(self, name):
+    def computeCDF(self, name):
         if not name in self.data or not 'Data' in self.data[name]:
             raise StandardError('Cannot find data for {NAME}'.format(NAME=name))
         values = self.data[name]['Data'][0]
         weights = self.data[name]['Data'][1]
-        histo = Hist(25, 0, 250, type='F')
+        quantiles = weighted_quantile(values, np.arange(0.,1.01,0.01), weights)
+        graph = ROOT.TGraph(quantiles.size, quantiles, np.arange(0.,1.01,0.01))
+        invertgraph = ROOT.TGraph(quantiles.size, np.arange(0.,1.01,0.01), quantiles)
+        self.data[name]['CDF'] = graph
+        self.data[name]['CDFInvert'] = invertgraph
+
+
+
+    def computeHisto(self, name, bins):
+        if not name in self.data or not 'Data' in self.data[name]:
+            raise StandardError('Cannot find data for {NAME}'.format(NAME=name))
+        values = self.data[name]['Data'][0]
+        weights = self.data[name]['Data'][1]
+        histo = Hist(bins, type='F')
+        histo.Sumw2()
         histo.fill_array(values, weights=weights)
         histo.Scale(1,'width')
         self.data[name]['Histo'] = histo
@@ -170,10 +230,10 @@ class Closure:
             self.data['{1}-{0}'.format(name1,name2)][type] = histodiff
             ## Smooth diff histo
             smoother = Smoother()
-            smoother.logScale = smoothLog
             smoother.gausWidth = smoothWidth
             smoother.histo = histodiff
             smoother.weights = createSmoothingWeightsFromErrors(histodiff)
+            #smoother.weights = createSmoothingWeightsFromErrors(histo1,histo2)
             smoother.computeSmoothHisto()
             self.data['{1}-{0}'.format(name1,name2)][type+'_Smooth'] = smoother.getContinuousSmoothHisto()
 
@@ -211,10 +271,16 @@ class Closure:
             self.data['{1}/{0}'.format(name1,name2)][type] = historatio
             ## Smooth ratio histo
             smoother = Smoother()
-            smoother.logScale = smoothLog
             smoother.gausWidth = smoothWidth
             smoother.histo = historatio
+            #smoother.rescaling = lambda x : math.log(x) if x>0. else 0
+            #smoother.invertRescaling = lambda x : math.exp(x)
+            cdf = self.data[name2]['CDF']
+            icdf = self.data[name2]['CDFInvert']
+            smoother.rescaling = lambda x : cdf.Eval(x)
+            smoother.invertRescaling = lambda x : icdf.Eval(x)
             smoother.weights = createSmoothingWeightsFromErrors(historatio)
+            #smoother.weights = createSmoothingWeightsFromErrors(histo1,histo2)
             smoother.computeSmoothHisto()
             self.data['{1}/{0}'.format(name1,name2)][type+'_Smooth'] = smoother.getContinuousSmoothHisto()
 
