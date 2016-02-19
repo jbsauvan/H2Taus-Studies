@@ -31,6 +31,16 @@
 * StudyFakeRate/MuTau/Combined
  - v_1_2016-02-03 
 
+* StudyFakeRate/MuTau/AllFakeFactors
+ - v_2_2016-02-08 
+ - v_5_2016-02-10 
+
+* StudyFakeRate/MuTau/FakeFactorUncertainties
+ - v_5_2016-02-19 
+
+* StudyFakeRate/MuTau/QCDFakeFactorClosure 
+ - v_1_2016-02-17
+
 * StudyFakeRate/MuTau_Stat
  - v_4_2016-01-10
 
@@ -47,6 +57,10 @@
 
 * StudyFakeRate/MuTau_FakeRate_QCDSS 
  - v_2_2016-01-28
+ - v_3_2016-02-17
+
+* StudyFakeRate/MuTau_Signal/
+ - v_1_2016-02-08 
 
 * TauPolarization/Background/ 
  - v_3_2015-12-16
