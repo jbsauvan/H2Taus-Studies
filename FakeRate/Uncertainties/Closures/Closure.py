@@ -3,7 +3,7 @@ import Density
 from array import array
 import numpy as np
 from root_numpy import root2array
-from rootpy.plotting import Hist
+from rootpy.plotting import Hist, Canvas
 import rootpy
 import math
 import copy
@@ -82,6 +82,20 @@ class Smoother:
         self.rescaling = lambda x:x
         self.invertRescaling = self.rescaling
         self.gausWidth = 1.
+        self.doErrors = False
+        self.random = ROOT.TRandom3()
+
+
+    def fluctuateHisto(self):
+        histoRnd = self.histo.Clone(self.histo.GetName()+'_rnd')
+        nbins = self.histo.GetNbinsX()
+        for b in range(1,nbins+1):
+            content = self.histo.GetBinContent(b)
+            error = self.histo.GetBinError(b)
+            newcontent = self.random.Gaus(content,error)
+            histoRnd.SetBinContent(b,newcontent)
+        return histoRnd
+
 
     def getSmoothedValue(self, x):
         sumw = 0.
@@ -121,14 +135,45 @@ class Smoother:
         maxi = self.histo.GetXaxis().GetBinUpEdge(self.histo.GetNbinsX())
         if mini==0.:
             mini = self.histo.GetXaxis().GetBinUpEdge(1)/10.
-        nbins = 1000
+        nbins = 500
         bins = []
+        #dx = (maxi - mini)/nbins
+        #bins = [mini+i*dx for i in range(0,nbins+1)]
         dx = (self.rescaling(maxi) - self.rescaling(mini))/nbins
-        bins = [self.invertRescaling(self.rescaling(mini)+i*dx) for i in range(0,nbins+1)]
+        bins = [self.invertRescaling(self.rescaling(mini)+i*dx) for i in range(0,nbins+2)]
         xs = [(x1+x2)/2 for x1,x2 in zip(bins[:-1],bins[1:])]
         ys = [self.getSmoothedValue(x) for x in xs]
         smoothGraph = ROOT.TGraphAsymmErrors(len(xs), array('f',xs), array('f',ys), array('f',[0]*len(xs)), array('f',[0]*len(xs)), array('f',[0]*len(xs)), array('f',[0]*len(xs)))
-        return smoothGraph
+        ysRnds = None
+        if self.doErrors:
+            for i in xrange(100):
+                histoNom = self.histo
+                self.histo = self.fluctuateHisto()
+                ysRnd = [self.getSmoothedValue(x) for x in xs]
+                if not ysRnds: 
+                    ysRnds = [[y] for y in ysRnd]
+                else:
+                    ysRnds = [yy+[y] for yy,y in zip(ysRnds,ysRnd)]
+                self.histo.Delete()
+                self.histo = histoNom
+            ysRMS = [np.std(yy) for yy in ysRnds]
+            ysUp = [y+rms for y,rms in zip(ys,ysRMS)]
+            ysDown = [y-rms for y,rms in zip(ys,ysRMS)]
+            ysDown.reverse()
+            ysUpDown = ysUp + ysDown
+            xsreversed = copy.deepcopy(xs)
+            xsreversed.reverse()
+            xsdouble = xs + xsreversed
+            smoothErrorGraph = ROOT.TGraphAsymmErrors(len(xsdouble), array('f',xsdouble), array('f',ysUpDown), array('f',[0]*len(xsdouble)), array('f',[0]*len(xsdouble)), array('f',[0]*len(xsdouble)), array('f',[0]*len(xsdouble)))
+        else:
+            xsreversed = copy.deepcopy(xs)
+            xsreversed.reverse()
+            xsdouble = xs + xsreversed
+            ysreversed = copy.deepcopy(ys)
+            ysreversed.reverse()
+            ysdouble = ys + ysreversed
+            smoothErrorGraph = ROOT.TGraphAsymmErrors(len(xsdouble), array('f',xsdouble), array('f',ysdouble), array('f',[0]*len(xsdouble)), array('f',[0]*len(xsdouble)), array('f',[0]*len(xsdouble)), array('f',[0]*len(xsdouble)))
+        return smoothGraph,smoothErrorGraph
 
 
 
@@ -200,7 +245,8 @@ class Closure:
         histo.Sumw2()
         histo.fill_array(values, weights=weights)
         histo.Scale(1,'width')
-        self.data[name]['Histo'] = histo
+        #self.data[name]['Histo'] = histo
+        self.data[name]['Histo_'+str(hash(str(bins)))] = histo
 
     def computeDiff(self, name1, name2, type, smoothWidth=0.2, smoothLog=True):
         if not name1 in self.data or not type in self.data[name1]:
@@ -234,10 +280,10 @@ class Closure:
             smoother.histo = histodiff
             smoother.weights = createSmoothingWeightsFromErrors(histodiff)
             #smoother.weights = createSmoothingWeightsFromErrors(histo1,histo2)
-            smoother.computeSmoothHisto()
-            self.data['{1}-{0}'.format(name1,name2)][type+'_Smooth'] = smoother.getContinuousSmoothHisto()
+            #smoother.computeSmoothHisto()
+            self.data['{1}-{0}'.format(name1,name2)][type+'_Smooth'] = smoother.getContinuousSmoothHisto()[0]
 
-    def computeRatio(self, name1, name2, type, smoothWidth=0.2, smoothLog=True):
+    def computeRatio(self, name1, name2, type, smoothWidth=0.2, kernelDistance='Adapt', doErrors=False):
         if not name1 in self.data or not type in self.data[name1]:
             raise StandardError('Cannot find {TYPE} for {NAME}'.format(TYPE=type,NAME=name1))
         if not name2 in self.data or not type in self.data[name2]:
@@ -273,17 +319,123 @@ class Closure:
             smoother = Smoother()
             smoother.gausWidth = smoothWidth
             smoother.histo = historatio
-            #smoother.rescaling = lambda x : math.log(x) if x>0. else 0
-            #smoother.invertRescaling = lambda x : math.exp(x)
-            cdf = self.data[name2]['CDF']
-            icdf = self.data[name2]['CDFInvert']
-            smoother.rescaling = lambda x : cdf.Eval(x)
-            smoother.invertRescaling = lambda x : icdf.Eval(x)
+            smoother.doErrors = doErrors
+            if kernelDistance is 'Adapt':
+                cdf = self.data[name2]['CDF']
+                icdf = self.data[name2]['CDFInvert']
+                smoother.rescaling = lambda x : cdf.Eval(x)
+                smoother.invertRescaling = lambda x : icdf.Eval(x)
+            elif kernelDistance is 'Linear':
+                smoother.rescaling = lambda x : x
+                smoother.invertRescaling = lambda x : x
+            elif kernelDistance is 'Log':
+                smoother.rescaling = lambda x : math.log(x)
+                smoother.invertRescaling = lambda x : math.exp(x)
             smoother.weights = createSmoothingWeightsFromErrors(historatio)
             #smoother.weights = createSmoothingWeightsFromErrors(histo1,histo2)
-            smoother.computeSmoothHisto()
-            self.data['{1}/{0}'.format(name1,name2)][type+'_Smooth'] = smoother.getContinuousSmoothHisto()
+            #smoother.computeSmoothHisto()
+            self.data['{1}/{0}'.format(name1,name2)][type+'_Smooth'] = smoother.getContinuousSmoothHisto()[0]
+            self.data['{1}/{0}'.format(name1,name2)][type+'_SmoothError'] = smoother.getContinuousSmoothHisto()[1]
 
 
 
+def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', doErrors=False):
+    binid = hash(str(bins))
+    closure.computeHisto('True', bins)
+    closure.computeHisto('Est', bins)
+    closure.computeRatio('Est', 'True', 'Histo_{H}'.format(H=binid), smoothWidth, kernelDistance, doErrors)
+    #
+    histoTrue = closure.data['True']['Histo_{H}'.format(H=binid)]
+    histoEst  = closure.data['Est']['Histo_{H}'.format(H=binid)]
+    histoRatio = closure.data['True/Est']['Histo_{H}'.format(H=binid)]
+    histoSmoothRatio = closure.data['True/Est']['Histo_{H}_Smooth'.format(H=binid)]
+    histoSmoothRatioError = closure.data['True/Est']['Histo_{H}_SmoothError'.format(H=binid)]
+    #
+    ############ plot raw distributions
+    histoDummy = Hist(1, bins[0],  bins[-1], type='F')
+    values = []
+    values.append(histoTrue.GetMaximum())
+    values.append(histoTrue.GetMinimum())
+    values.append(histoEst.GetMaximum())
+    values.append(histoEst.GetMinimum())
+    maxi = max(values)*1.1
+    mini = min(values)
+    histoDummy.SetAxisRange(mini, maxi, 'Y')
+    ##
+    histoTrue.SetMarkerColor(ROOT.kBlack)
+    histoEst.SetMarkerStyle(24)
+    histoEst.SetMarkerColor(ROOT.kGray+3)
+    ##
+    canvas = Canvas(800, 800)
+    canvas.SetName('{NAME}_Canvas'.format(NAME=name))
+    histoDummy.SetXTitle('m_{vis} [GeV]')
+    histoDummy.SetYTitle('Events')
+    histoDummy.Draw()
+    histoTrue.Draw('same')
+    histoEst.Draw('same')
+    legend = ROOT.TLegend(0.4,0.7,0.9,0.9)
+    legend.SetFillColor(0)
+    legend.SetLineColor(0)
+    legend.AddEntry(histoTrue, 'True background', 'lp')
+    legend.AddEntry(histoEst, 'Estimated background', 'lp')
+    legend.Draw()
+    canvas.Print('results/{NAME}_NonClosure.png'.format(NAME=name))
+
+
+    ################ Plot ratios
+    histoDummyRatio = Hist(1, bins[0],  bins[-1], type='F')
+    values = []
+    values.append(histoRatio.GetMaximum())
+    values.append(histoRatio.GetMinimum())
+    maxi = max(values)
+    mini = min(values)
+    maxi = maxi*1.1 if maxi>0 else maxi*0.9
+    mini = mini*1.1 if mini<0 else mini*0.9
+    histoDummyRatio.SetAxisRange(mini, maxi, 'Y')
+    ##
+    histoRatio.SetMarkerColor(ROOT.kBlack)
+    histoSmoothRatio.SetLineColor(ROOT.kGray+3)
+    histoSmoothRatio.SetLineWidth(2)
+    histoSmoothRatioError.SetLineColor(ROOT.kGray+1)
+    histoSmoothRatioError.SetFillColor(ROOT.kGray+1)
+    ##
+    canvasRatio = Canvas(800, 800)
+    canvasRatio.SetName('{NAME}_Ratio_Canvas'.format(NAME=name))
+    histoDummyRatio.SetXTitle('m_{vis} [GeV]')
+    histoDummyRatio.SetYTitle('Ratio')
+    histoDummyRatio.Draw()
+    histoSmoothRatioError.Draw('fl same')
+    histoSmoothRatio.Draw('pl same')
+    histoRatio.Draw('same')
+    canvasRatio.Print('results/{NAME}_NonClosure_Ratio.png'.format(NAME=name))
+
+def plotSummary(name, closure, xmin=0, xmax=1):
+    histoSmoothRatios = []
+    for hname,graph in closure.data['True/Est'].items():
+        if 'Histo' in hname and 'Smooth' in hname:
+            histoSmoothRatios.append(graph)
+    ################ Plot ratios
+    histoDummyRatio = Hist(1, xmin,  xmax, type='F')
+    values = []
+    for ratio in histoSmoothRatios:
+        for p in xrange(ratio.GetN()):
+            values.append(ratio.GetY()[p])
+    maxi = max(values)
+    mini = min(values)
+    maxi = maxi*1.1 if maxi>0 else maxi*0.9
+    mini = mini*1.1 if mini<0 else mini*0.9
+    histoDummyRatio.SetAxisRange(mini, maxi, 'Y')
+    ##
+    for ratio in histoSmoothRatios:
+        ratio.SetLineColor(ROOT.kGray+3)
+        ratio.SetLineWidth(1)
+    ##
+    canvasRatio = Canvas(800, 800)
+    canvasRatio.SetName('Ratio_Summary_Canvas')
+    histoDummyRatio.SetXTitle('m_{vis} [GeV]')
+    histoDummyRatio.SetYTitle('Ratio')
+    histoDummyRatio.Draw()
+    for ratio in histoSmoothRatios:
+        ratio.Draw('l same')
+    canvasRatio.Print('results/{NAME}_NonClosure_Ratio_Summary.png'.format(NAME=name))
 

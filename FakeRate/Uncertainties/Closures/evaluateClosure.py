@@ -1,7 +1,7 @@
 from rootpy.plotting import Hist, Canvas
 import ROOT
 import Density
-from Closure import Closure
+from Closure import Closure, plotClosure, plotSummary
 import pickle
 
 ## load MC x-sections and sums of weights
@@ -74,7 +74,13 @@ output_file = ROOT.TFile('./results/nonClosures.root', 'RECREATE')
 
 #mvis_bins = xrange(0, 400, 10)
 #mvis_bins = [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 110., 120., 130., 140., 150., 160., 170., 180., 190., 200., 225., 250., 275., 300., 325., 350., 375., 400., 450., 500., 550., 600.] 
-mvis_bins = [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 110., 120., 130., 140., 150., 160., 170., 180., 190., 200., 225., 250., 300., 350., 450., 600.] 
+mvis_bins = {
+    #'Standard_x2':[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,155,160,165,170,175,180,185,190,195,200,225,250,275,300,325,350,400,450,525,600],
+    'Standard':[0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 110., 120., 130., 140., 150., 160., 170., 180., 190., 200., 225., 250., 300., 350., 450., 600.],
+    #'Standard_Div2':[0., 20., 40., 60., 80., 100., 120., 140., 160., 180., 200., 250., 350., 600.],
+    #'Standard_Div4':[0., 40., 80., 120., 160., 200., 350., 600.],
+}
+
 
 
 def setPlotStyle():
@@ -122,130 +128,50 @@ for fakeType,inputs in closure_inputs.items():
     closure.fillData('True', input_files, treeTrue, 'mvis', 'Weight', global_weights)
     closure.fillData('Est', input_files, treeEst, 'mvis', 'Weight', global_weights)
 
-    #closure.computeTKDE('True', mvis_bins[0], mvis_bins[-1])
-    #closure.computeTKDE('Est', mvis_bins[0], mvis_bins[-1])
     closure.computeCDF('True')
     closure.computeCDF('Est')
-    closure.computeHisto('True', mvis_bins)
-    closure.computeHisto('Est', mvis_bins)
-    #closure.computeDiff('True', 'Est', 'TKDE')
-    closure.computeDiff('True', 'Est', 'Histo')
-    #closure.computeRatio('Est', 'True', 'TKDE')
-    closure.computeRatio('Est', 'True', 'Histo', smoothWidth=0.1)
 
-    closure.clearData()
+    for name,bins in mvis_bins.items():
+        plotClosure(fakeType+'_'+name, closure, bins, doErrors=True)
 
-    #graphTrue = closure.data['True']['TKDE']
-    #graphEst  = closure.data['Est']['TKDE']
-    cdfTrue = closure.data['True']['CDF']
-    cdfEst  = closure.data['Est']['CDF']
-    histoTrue = closure.data['True']['Histo']
-    histoEst  = closure.data['Est']['Histo']
+    #for nbins in [100,50,25]:
+        #cdf = closure.data['True']['CDFInvert']
+        #bins = [cdf.Eval(i/float(nbins)) for i in xrange(nbins+1)]
+        #plotClosure(fakeType+'_NBins'+str(nbins), closure, bins)
 
-    #graphDiff = closure.data['Est-True']['TKDE']
-    histoDiff = closure.data['Est-True']['Histo']
-    histoSmoothDiff = closure.data['Est-True']['Histo_Smooth']
-    #graphRatio = closure.data['True/Est']['TKDE']
-    histoRatio = closure.data['True/Est']['Histo']
-    histoSmoothRatio = closure.data['True/Est']['Histo_Smooth']
+    plotSummary(fakeType, closure, 0, 600)
 
-
-    ############ plot raw distributions
-    histoDummy = Hist(1, mvis_bins[0],  mvis_bins[-1], type='F')
-    values = []
-    values.append(histoTrue.GetMaximum())
-    values.append(histoTrue.GetMinimum())
-    values.append(histoEst.GetMaximum())
-    values.append(histoEst.GetMinimum())
-    maxi = max(values)*1.1
-    mini = min(values)
-    histoDummy.SetAxisRange(mini, maxi, 'Y')
-    ##
-    histoTrue.SetMarkerColor(ROOT.kBlack)
-    histoEst.SetMarkerStyle(24)
-    histoEst.SetMarkerColor(ROOT.kGray+3)
-    ##
-    canvas = Canvas(800, 800)
-    canvas.SetName('{FAKETYPE}_Canvas'.format(FAKETYPE=fakeType))
-    histoDummy.SetXTitle('m_{vis} [GeV]')
-    histoDummy.SetYTitle('Events')
-    histoDummy.Draw()
-    histoTrue.Draw('same')
-    histoEst.Draw('same')
-    legend = ROOT.TLegend(0.4,0.7,0.9,0.9)
-    legend.SetFillColor(0)
-    legend.SetLineColor(0)
-    legend.AddEntry(histoTrue, 'True background', 'lp')
-    legend.AddEntry(histoEst, 'Estimated background', 'lp')
-    legend.Draw()
-    canvas.Print('results/{FAKETYPE}_NonClosure.png'.format(FAKETYPE=fakeType))
-
-
-    ################ Plot ratios
-    histoDummy2 = Hist(1, mvis_bins[0],  mvis_bins[-1], type='F')
-    values = []
-    values.append(histoRatio.GetMaximum())
-    values.append(histoRatio.GetMinimum())
-    #values.append(histoSmoothRatio.GetMaximum())
-    #values.append(histoSmoothRatio.GetMinimum())
-    maxi = max(values)
-    mini = min(values)
-    maxi = maxi*1.1 if maxi>0 else maxi*0.9
-    mini = mini*1.1 if mini<0 else mini*0.9
-    histoDummy2.SetAxisRange(mini, maxi, 'Y')
-    ##
-    histoRatio.SetMarkerColor(ROOT.kBlack)
-    histoSmoothRatio.SetLineColor(ROOT.kGray+3)
-    histoSmoothRatio.SetLineWidth(3)
-    ##
-    canvas2 = Canvas(800, 800)
-    canvas2.SetName('{FAKETYPE}_Ratio_Canvas'.format(FAKETYPE=fakeType))
-    histoDummy2.SetXTitle('m_{vis} [GeV]')
-    histoDummy2.SetYTitle('Ratio')
-    histoDummy2.Draw()
-    histoRatio.Draw('same')
-    histoSmoothRatio.Draw('l same')
-    canvas2.Print('results/{FAKETYPE}_NonClosure_Ratio.png'.format(FAKETYPE=fakeType))
     #
-    output_file.cd()
-    canvas.Write()
-    #graphTrue.SetName('{FAKETYPE}_KDE_True'.format(FAKETYPE=fakeType))
-    #graphEst.SetName('{FAKETYPE}_KDE_Est'.format(FAKETYPE=fakeType))
-    #graphDiff.SetName('{FAKETYPE}_KDE_Diff'.format(FAKETYPE=fakeType))
-    #graphRatio.SetName('{FAKETYPE}_KDE_Ratio'.format(FAKETYPE=fakeType))
-    cdfTrue.SetName('{FAKETYPE}_CDF_True'.format(FAKETYPE=fakeType))
-    cdfEst.SetName('{FAKETYPE}_CDF_Est'.format(FAKETYPE=fakeType))
-    histoTrue.SetName('{FAKETYPE}_Histo_True'.format(FAKETYPE=fakeType))
-    histoEst.SetName('{FAKETYPE}_Histo_Est'.format(FAKETYPE=fakeType))
-    histoDiff.SetName('{FAKETYPE}_Histo_Diff'.format(FAKETYPE=fakeType))
-    histoSmoothDiff.SetName('{FAKETYPE}_Histo_Smooth_Diff'.format(FAKETYPE=fakeType))
-    histoRatio.SetName('{FAKETYPE}_Histo_Ratio'.format(FAKETYPE=fakeType))
-    histoSmoothRatio.SetName('{FAKETYPE}_Histo_Smooth_Ratio'.format(FAKETYPE=fakeType))
-    #graphTrue.Write()
-    #graphEst.Write()
-    #graphDiff.Write()
-    #graphRatio.Write()
-    cdfTrue.Write()
-    cdfEst.Write()
-    histoTrue.Write()
-    histoEst.Write()
-    histoDiff.Write()
-    histoSmoothDiff.Write()
-    histoRatio.Write()
-    histoSmoothRatio.Write()
-    #
-    #output_data.append(graphTrue)
-    #output_data.append(graphEst)
-    #output_data.append(graphDiff)
-    #output_data.append(graphRatio)
-    output_data.append(cdfTrue)
-    output_data.append(cdfEst)
-    output_data.append(histoTrue)
-    output_data.append(histoEst)
-    output_data.append(histoDiff)
-    output_data.append(histoSmoothDiff)
-    output_data.append(histoRatio)
-    output_data.append(histoSmoothRatio)
+    #output_file.cd()
+    #canvas.Write()
+    ##cdfTrue.SetName('{FAKETYPE}_CDF_True'.format(FAKETYPE=fakeType))
+    ##cdfEst.SetName('{FAKETYPE}_CDF_Est'.format(FAKETYPE=fakeType))
+    #histoTrue.SetName('{FAKETYPE}_Histo_True_{H}'.format(FAKETYPE=fakeType,H=binid))
+    #histoEst.SetName('{FAKETYPE}_Histo_Est_{H}'.format(FAKETYPE=fakeType,H=binid))
+    #histoDiff.SetName('{FAKETYPE}_Histo_Diff_{H}'.format(FAKETYPE=fakeType,H=binid))
+    #histoSmoothDiff.SetName('{FAKETYPE}_Histo_Smooth_Diff_{H}'.format(FAKETYPE=fakeType,H=binid))
+    #histoRatio.SetName('{FAKETYPE}_Histo_Ratio_{H}'.format(FAKETYPE=fakeType,H=binid))
+    #histoSmoothRatio.SetName('{FAKETYPE}_Histo_Smooth_Ratio_{H}'.format(FAKETYPE=fakeType,H=binid))
+    #histoSmoothRatioError.SetName('{FAKETYPE}_Histo_SmoothError_Ratio_{H}'.format(FAKETYPE=fakeType,H=binid))
+    ##cdfTrue.Write()
+    ##cdfEst.Write()
+    #histoTrue.Write()
+    #histoEst.Write()
+    #histoDiff.Write()
+    #histoSmoothDiff.Write()
+    #histoRatio.Write()
+    #histoSmoothRatio.Write()
+    #histoSmoothRatioError.Write()
+    ##
+    ##output_data.append(cdfTrue)
+    ##output_data.append(cdfEst)
+    #output_data.append(histoTrue)
+    #output_data.append(histoEst)
+    #output_data.append(histoDiff)
+    #output_data.append(histoSmoothDiff)
+    #output_data.append(histoRatio)
+    #output_data.append(histoSmoothRatio)
+    #output_data.append(histoSmoothRatioError)
 
 
 output_file.Close()
