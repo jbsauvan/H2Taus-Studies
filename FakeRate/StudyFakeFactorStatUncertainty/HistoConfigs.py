@@ -37,6 +37,13 @@ configFactorStat4.lineWidth = 2
 configFactorStat4.plotCfg = "HIST"
 configFactorStat4.legend = ""
 #
+configFactorStatShifts = Config()
+configFactorStatShifts.color = ROOT.kBlue
+configFactorStatShifts.lineStyle = 1
+configFactorStatShifts.lineWidth = 2
+configFactorStatShifts.plotCfg = "HIST"
+configFactorStatShifts.legend = ""
+#
 configsFactorStat = {}
 configsFactorStat['Weight_Iso_Medium_Inclusive'] = Config()
 configsFactorStat['Weight_Iso_Medium_Inclusive'].color = ROOT.kBlue

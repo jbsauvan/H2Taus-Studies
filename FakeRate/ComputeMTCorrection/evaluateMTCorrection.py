@@ -3,6 +3,7 @@ import ROOT
 import Density
 from Closure import Closure, plotClosure, plotSummary
 import pickle
+from array import array
 
 ## load MC x-sections and sums of weights
 
@@ -32,6 +33,7 @@ mt_bins = {
     'Standard_Div2':[0., 20., 40., 60., 80., 100., 140.,200., 250.],
 }
 
+nominal = 'Standard'
 
 
 def setPlotStyle():
@@ -79,6 +81,48 @@ def forceLowMTLinearDistance(closure, name):
         invcdf.SetPoint(p, cdf.GetX()[p]*0.5/value50, cdf.GetX()[p])
         print cdf.GetX()[p], cdf.GetX()[p]*0.5/value50
 
+def writeCorrectionAnderrors(closure, output):
+    histoId = str(hash(str(mt_bins[nominal])))
+    corr = closure.data['True/Est']['Histo_{H}_Smooth'.format(H=histoId)]
+    corrStatErr = closure.data['True/Est']['Histo_{H}_SmoothError'.format(H=histoId)]
+    xs = []
+    ysup = []
+    ysdown = []
+    ysbinup = []
+    ysbindown = []
+    for p in xrange(corr.GetN()):
+        nom = corr.GetY()[p]
+        up = corrStatErr.GetY()[p]
+        down = nom - (up-nom)
+        xs.append(corr.GetX()[p])
+        ysup.append(up)
+        ysdown.append(down)
+        binup = 0
+        bindown = 0
+        for name,graph in closure.data['True/Est'].items():
+            if 'Histo' in name and 'Smooth' in name and not 'Error' in name:
+                diff = graph.GetY()[p] - nom
+                if diff>binup: binup = diff
+                if diff<bindown: bindown = diff
+        ysbinup.append(nom+binup)
+        ysbindown.append(nom+bindown)
+    #
+    graphup = ROOT.TGraphAsymmErrors(corr.GetN(), array('f', xs), array('f',ysup), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN())) 
+    graphdown = ROOT.TGraphAsymmErrors(corr.GetN(), array('f', xs), array('f',ysdown), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN())) 
+    graphbinup = ROOT.TGraphAsymmErrors(corr.GetN(), array('f', xs), array('f',ysbinup), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN())) 
+    graphbindown = ROOT.TGraphAsymmErrors(corr.GetN(), array('f', xs), array('f',ysbindown), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN()), array('f',[0]*corr.GetN()))
+    corr.SetName('mt_correction')
+    graphup.SetName('mt_correction_statup')
+    graphdown.SetName('mt_correction_statdown')
+    graphbinup.SetName('mt_correction_binup')
+    graphbindown.SetName('mt_correction_bindown')
+    output.cd()
+    corr.Write()
+    graphup.Write()
+    graphdown.Write()
+    graphbinup.Write()
+    graphbindown.Write()
+
 
 setPlotStyle()
 for fakeType,inputs in closure_inputs.items():
@@ -98,7 +142,7 @@ for fakeType,inputs in closure_inputs.items():
 
 
     for name,bins in mt_bins.items():
-        plotClosure(fakeType+'_'+name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt')
+        plotClosure(fakeType+'_'+name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', doErrors=True)
 
     #for nbins in [100,50,25]:
         #cdf = closure.data['True']['CDFInvert']
@@ -108,8 +152,9 @@ for fakeType,inputs in closure_inputs.items():
     plotSummary(fakeType, closure, 0, 250)
 
     output_file.cd()
-    closure.data['True']['CDF'].Write()
-    closure.data['Est']['CDF'].Write()
+    writeCorrectionAnderrors(closure, output_file)
+    #closure.data['True']['CDF'].Write()
+    #closure.data['Est']['CDF'].Write()
 
 
     #canvas.Write()

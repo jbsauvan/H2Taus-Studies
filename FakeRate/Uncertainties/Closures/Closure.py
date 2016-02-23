@@ -412,7 +412,7 @@ def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', do
 def plotSummary(name, closure, xmin=0, xmax=1):
     histoSmoothRatios = []
     for hname,graph in closure.data['True/Est'].items():
-        if 'Histo' in hname and 'Smooth' in hname:
+        if 'Histo' in hname and 'Smooth' in hname and not 'Error' in hname:
             histoSmoothRatios.append(graph)
     ################ Plot ratios
     histoDummyRatio = Hist(1, xmin,  xmax, type='F')
