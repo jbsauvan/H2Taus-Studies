@@ -2,14 +2,11 @@ import ROOT
 from BinByBinCorrelations import CorrelationMatrix
 
 ## Input files and histograms
-histoDir = "../../../Histos/StudyFakeRate/MuTau/FakeFactorUncertaintiesFromToys/"
-version = "v_1_2016-02-23"
-samples = ["W", "TT", "QCD", "ZJ"]
-
+histoDir = "../../../Histos/StudyFakeRate/MuTau/FakeFactorUncertainties/"
+version = "v_5_2016-02-19"
 samples = {
     'Data':['Data_Run15D_05Oct','Data_Run15D_v4']
 }
-
 
 histos = {}
 for name,sample in samples.items():
@@ -20,13 +17,24 @@ for name,sample in samples.items():
 systematics = {
     'Weight_Combined_Iso_Medium_VsPtDecay':[],
 }
+## Retrieve all shifted fake factors in the input files
 for name,sys in systematics.items():
-    for i in xrange(200):
-        sys.append(["{NAME}_Fluctuate{I}".format(NAME=name,I=i)])
-
-#systematics = []
-#for i in xrange(200):
-    #systematics.append(["Weight_Iso_Medium_VsPt_Fluctuate{}".format(i)])
+    f = ROOT.TFile.Open(histos['Data'][0][0])
+    keys = f.GetListOfKeys()
+    upsys = []
+    downsys = []
+    for key in keys:
+        if key.IsFolder() and 'ShiftStat' in key.GetName():
+            if 'Up' in key.GetName() and not key.GetName() in upsys: 
+                upsys.append(key.GetName())
+            if 'Down' in key.GetName() and not key.GetName() in downsys: 
+                downsys.append(key.GetName())
+    for us in upsys:
+        ds = us.replace('Up','Down')
+        if not ds in downsys:
+            print 'WARNING: Cannot find down sys corresponding to '+us
+        else:
+            sys.append([us,ds])
 
 
 #nominal  = 'Weight_Iso_Medium_VsPt'
@@ -39,11 +47,11 @@ for name,sys in systematics.items():
         plots.append(CorrelationMatrix())
         plots[-1].inputFiles = [ROOT.TFile.Open(h[0]) for h in histo]
         plots[-1].histoNames = [h[1] for h in histo]
-        plots[-1].name = "mvis_"+sample+'_'+name+'_200'
+        plots[-1].name = "mvis_"+sample+'_'+name+'_statShifts'
         plots[-1].title = "m_{vis} [GeV]"
         #plots[-1].plotNumbers = True
         plots[-1].plotDir = 'plots/correlations/'
-        plots[-1].sysNames = sys[0:200]
+        plots[-1].sysNames = sys
         plots[-1].nomName = name
         plots[-1].retrieveHistos()
         plots[-1].computeShifts()

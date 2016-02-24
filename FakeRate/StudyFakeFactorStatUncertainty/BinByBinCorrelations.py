@@ -2,14 +2,25 @@ import ROOT
 import math
 import array
 
-def retrieveAndCheckHisto(inFile,histoName,newName):
+def retrieveAndCheckHisto(inFile,histoName):
     histo = inFile.Get(histoName)
     if not histo:
         raise StandardError("ERROR: cannot find histo "+histoName+" in file "+inFile.GetName())
     histo.__class__ =  ROOT.TH1F
     histo.SetDirectory(0)
-    histo.SetName(newName)
+    #histo.SetName(newName)
     return histo
+
+def sumHistos(files, histoNames):
+    histoSum = None
+    for file,histoName in zip(files,histoNames):
+        histo = retrieveAndCheckHisto(file, histoName)
+        if not histoSum: 
+            histoSum = histo.Clone(histo.GetName()+'_sum')
+            histoSum.__class__ = ROOT.TH1F
+            histoSum.SetDirectory(0)
+        else: histoSum.Add(histo)
+    return histoSum
 
 def computeShift(hNominal, hSys, name):
     if len(hSys)>2:
@@ -71,8 +82,8 @@ class CorrelationMatrix:
         self.setPlotStyle()
         self.name = ""
         self.plotDir = 'plots/'
-        self.inputFile = None
-        self.histoName = ""
+        self.inputFiles = None
+        self.histoNames = ""
         self.nomName = ""
         self.sysNames = []
         self.nomHisto = None
@@ -85,13 +96,13 @@ class CorrelationMatrix:
         self.plotNumbers = False
 
     def retrieveHistos(self):
-        self.nomHisto = retrieveAndCheckHisto(self.inputFile, self.histoName if self.nomName=='' else self.nomName+'/'+self.histoName, self.histoName+'_'+self.name+"_Nom")
+        self.nomHisto = sumHistos(self.inputFiles, [f if self.nomName=='' else self.nomName+'/'+h for h in self.histoNames])
         for sysList in self.sysNames:
             if len(sysList)>2:
                 raise StandardError("ERROR: More than 2 components for one systematic source")
             sysHistos = []
             for sys in sysList:
-                sysHistos.append(retrieveAndCheckHisto(self.inputFile, sys+"/"+self.histoName, self.histoName+'_'+self.name+"_"+sys))
+                sysHistos.append(sumHistos(self.inputFiles, [sys+"/"+h for h in self.histoNames]))
             self.sysHistos.append(sysHistos)
 
     def computeShifts(self):
@@ -106,7 +117,7 @@ class CorrelationMatrix:
             edge = self.nomHisto.GetXaxis().GetBinLowEdge(b)
             edges.append(edge)
         edges.append(self.nomHisto.GetXaxis().GetBinUpEdge(nbins))
-        self.matrix = ROOT.TH2F(self.histoName+"_corr",self.histoName,nbins,array.array('f',edges),nbins,array.array('f',edges))
+        self.matrix = ROOT.TH2F(self.histoNames[0]+"_corr",self.histoNames[0],nbins,array.array('f',edges),nbins,array.array('f',edges))
         for i in range(1,nbins+1):
             for j in range(1,nbins+1):
                 covii=0.

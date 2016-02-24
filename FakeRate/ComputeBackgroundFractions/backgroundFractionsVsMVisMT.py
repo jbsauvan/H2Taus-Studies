@@ -2,7 +2,7 @@ import copy
 import ROOT
 from Efficiency2DPlots import Efficiency2DPlot, PlotInfo
 
-from HistCreator import createHistograms, removeNegativeValues
+from HistCreator import createHistograms, removeNegativeValues2D, checkFractionSums2D
 
 from CMGTools.H2TauTau.proto.plotter.PlotConfigs import HistogramCfg, VariableCfg, BasicHistogramCfg
 from CMGTools.H2TauTau.proto.plotter.Samples import createSampleLists
@@ -79,72 +79,169 @@ global_selections = [
 
 backgrounds = ['VV', 'TT', 'QCD', 'W', 'ZJ']
 
+shifts = {
+    'Nom':# no shift
+    {}, 
+    'WStat':# stat shifts
+    {
+        'W':1.
+    }, 
+    'QCDStat':# stat shifts
+    {
+        'QCD':1.
+    },
+    ## QCD up/down
+    'QCDUp':
+    {
+        'QCD':1.1,
+    },
+    'QCDDown':
+    {
+        'QCD':0.9,
+    },
+    ## W up/down
+    'WUp':
+    {
+        'W':1.1,
+    },
+    'WDown':
+    {
+        'W':0.9,
+    },
+    ## TT up/down
+    'TTUp':
+    {
+        'TT':1.1,
+    },
+    'TTDown':
+    {
+        'TT':0.9,
+    },
+}
+
 
 plotInfo = PlotInfo()
 plotInfo.xTitle = 'm_{vis} [GeV]'
 plotInfo.yTitle = 'm_{T} [GeV]'
 
+
 # Loop on variables
 for variable in variables:
     # Loop on global selections
     for global_selection in global_selections:
-        plots = []
-        histos = None
-        ## Prepare histos configs
-        samples_tmp = []
-        qcd = []
-        for sample in histo_samples:
-            config = BasicHistogramCfg(name=sample[Name],
-                                     dir_name=sample[DirName],
-                                     ana_dir=analysis_dir,
-                                     histo_file_name=histo_file_template_name.format(SAMPLE=sample[HistoDir]),
-                                     histo_name=histo_template_name.format(SEL=global_selection.format(SIGN=''),VAR=variable.name),
-                                     is_data=sample.get(IsData, False),
-                                     xsec=sample.get(XSection, 1),
-                                     sumweights=sample.get(SumWeights,1)
-                                     )
-            # Take QCD from SS region
-            config_qcd = BasicHistogramCfg(name=sample[Name],
-                                     dir_name=sample[DirName],
-                                     ana_dir=analysis_dir,
-                                     histo_file_name=histo_file_template_name.format(SAMPLE=sample[HistoDir]),
-                                     histo_name=histo_template_name.format(SEL=global_selection.format(SIGN='SS_'),VAR=variable.name),
-                                     is_data=sample.get(IsData, False),
-                                     xsec=sample.get(XSection, 1),
-                                     sumweights=sample.get(SumWeights,1)
-                                     )
-
-            if sample[Name]=='data_obs': config_qcd.scale = 1.06
-            else: config_qcd.scale = -1.06
-            qcd.append(config_qcd)
-            ## Discard non fake MC
-            if not sample[HistoDir] in non_fakes: samples_tmp.append(config)
-        # Add QCD component
-        samples_tmp.append( HistogramCfg(name='QCD', var=variable, cfgs=qcd, lumi=int_lumi) )
-        config = HistogramCfg(name='config', var=variable, cfgs=samples_tmp, lumi=int_lumi)
-        histos = createHistograms(config)
-        for histo in histos.histos.values():
-            removeNegativeValues(histo)
-
-        histo_total = None
-        for background in backgrounds:
-            if not histo_total: histo_total = histos.histos[background].Clone('{SEL}_{VAR}_sum'.format(SEL=global_selection.format(SIGN=''),VAR=variable.name))
-            else: histo_total.Add(histos.histos[background])
-
         outputFile = ROOT.TFile.Open('results/backgroundFraction_{SEL}_{VAR}.root'.format(SEL=global_selection.format(SIGN=''),VAR=variable.name), 'RECREATE')
-        histo_total.Write()
-        for background,histo in histos.histos.items():
-            if not background in backgrounds: continue
-            histo.Write()
-            plot = Efficiency2DPlot()
-            plot.name = "backgroundFraction_{SEL}_{VAR}_{BACK}".format(SEL=global_selection.format(SIGN=''),VAR=variable.name,BACK=background)
-            plot.plotDir = "results/"
-            plot.addEfficiency(histo, histo_total, plotInfo)
-            plot.plot(0, 1)
-            plots.append(plot)
+        # Loop on systematic shifts
+        for shiftname, shift in shifts.items():
+            print '>>>>>>>>>>>>>>>>>>>>>>>>>>'
+            print '  Shift '+shiftname
+            plots = []
+            histos = None
+            ## Prepare histos configs
+            samples_tmp = []
+            qcd = []
+            for sample in histo_samples:
+                config = BasicHistogramCfg(name=sample[Name],
+                                         dir_name=sample[DirName],
+                                         ana_dir=analysis_dir,
+                                         histo_file_name=histo_file_template_name.format(SAMPLE=sample[HistoDir]),
+                                         histo_name=histo_template_name.format(SEL=global_selection.format(SIGN=''),VAR=variable.name),
+                                         is_data=sample.get(IsData, False),
+                                         xsec=sample.get(XSection, 1),
+                                         sumweights=sample.get(SumWeights,1)
+                                         )
+                ## Shift background nom/up/down
+                if config.name in shift:
+                    config.scale  = shift[config.name]
+                # Take QCD from SS region
+                config_qcd = BasicHistogramCfg(name=sample[Name],
+                                         dir_name=sample[DirName],
+                                         ana_dir=analysis_dir,
+                                         histo_file_name=histo_file_template_name.format(SAMPLE=sample[HistoDir]),
+                                         histo_name=histo_template_name.format(SEL=global_selection.format(SIGN='SS_'),VAR=variable.name),
+                                         is_data=sample.get(IsData, False),
+                                         xsec=sample.get(XSection, 1),
+                                         sumweights=sample.get(SumWeights,1)
+                                         )
+                if sample[Name]=='data_obs': config_qcd.scale = 1.06
+                else: config_qcd.scale = -1.06
+                # shift also background subtraction in QCD
+                if config_qcd.name in shift:
+                    config_qcd.scale *= shift[config.name]
+                if 'QCD' in shift:
+                    config_qcd.scale *= shift['QCD']
+                qcd.append(config_qcd)
+                ## Discard non fake MC
+                if not sample[HistoDir] in non_fakes: samples_tmp.append(config)
+            # Add QCD component
+            config_qcd_total = HistogramCfg(name='QCD', var=variable, cfgs=qcd, lumi=int_lumi)
+            samples_tmp.append( config_qcd_total )
+            config = HistogramCfg(name='config', var=variable, cfgs=samples_tmp, lumi=int_lumi)
+            histos = createHistograms(config)
+            for histo in histos.histos.values():
+                removeNegativeValues2D(histo)
 
-        for plot in plots:
-            plot.efficiency.SetName('h_'+plot.name)
-            plot.efficiency.Write()
+            if 'Stat' in shiftname:
+                ## Fluctuate up/down each bin
+                for sign in [-1,1]:
+                    for bx in xrange(1,histos.histos['QCD'].GetNbinsX()+1):
+                        for by in xrange(1,histos.histos['QCD'].GetNbinsY()+1):
+                            plots = []
+                            # Keep backup of non-shifted histos
+                            histosbackup = {}
+                            for background in backgrounds:
+                                if background in shift:
+                                    content = histos.histos[background].GetBinContent(bx,by)
+                                    error = histos.histos[background].GetBinError(bx,by)
+                                    fluct = max(0,content + sign*error)
+                                    histosbackup[background] = histos.histos[background]
+                                    histos.histos[background] = histos.histos[background].Clone(histos.histos[background].GetName()+'_copy')
+                                    histos.histos[background].SetBinContent(bx,by,fluct)
+
+                            histo_total = None
+                            for background in backgrounds:
+                                if not histo_total: histo_total = histos.histos[background].Clone('{SEL}_{VAR}_{SHIFT}_{BX}_{BY}_{SIGN}_sum'.format(SEL=global_selection.format(SIGN=''),VAR=variable.name,SHIFT=shiftname,BX=bx,BY=by,SIGN='Up' if sign==1 else 'Down'))
+                                else: histo_total.Add(histos.histos[background])
+
+                            outputFile.cd()
+                            histo_total.Write()
+                            for background,histo in histos.histos.items():
+                                if not background in backgrounds: continue
+                                #histo.Write()
+                                plot = Efficiency2DPlot()
+                                plot.name = "backgroundFraction_{SEL}_{VAR}_{BACK}_{SHIFT}_{BX}_{BY}_{SIGN}".format(SEL=global_selection.format(SIGN=''),VAR=variable.name,BACK=background,SHIFT=shiftname,BX=bx,BY=by,SIGN='Up' if sign==1 else 'Down')
+                                plot.plotDir = "results/"
+                                plot.addEfficiency(histo, histo_total, plotInfo)
+                                #plot.plot(0, 1)
+                                plots.append(plot)
+
+                            checkFractionSums2D([plot.efficiency for plot in plots])
+                            for plot in plots:
+                                plot.efficiency.SetName('h_'+plot.name)
+                                plot.efficiency.Write()
+                            # Reset to non-shifted histos
+                            for background,histo in histosbackup.items():
+                                histos.histos[background] = histo
+            else:
+                histo_total = None
+                for background in backgrounds:
+                    if not histo_total: histo_total = histos.histos[background].Clone('{SEL}_{VAR}_{SHIFT}_sum'.format(SEL=global_selection.format(SIGN=''),VAR=variable.name,SHIFT=shiftname))
+                    else: histo_total.Add(histos.histos[background])
+
+                outputFile.cd()
+                histo_total.Write()
+                for background,histo in histos.histos.items():
+                    if not background in backgrounds: continue
+                    #histo.Write()
+                    plot = Efficiency2DPlot()
+                    plot.name = "backgroundFraction_{SEL}_{VAR}_{BACK}_{SHIFT}".format(SEL=global_selection.format(SIGN=''),VAR=variable.name,BACK=background,SHIFT=shiftname)
+                    plot.plotDir = "results/"
+                    plot.addEfficiency(histo, histo_total, plotInfo)
+                    plot.plot(0, 1)
+                    plots.append(plot)
+
+                checkFractionSums2D([plot.efficiency for plot in plots])
+                for plot in plots:
+                    plot.efficiency.SetName('h_'+plot.name)
+                    plot.efficiency.Write()
 
         outputFile.Close()

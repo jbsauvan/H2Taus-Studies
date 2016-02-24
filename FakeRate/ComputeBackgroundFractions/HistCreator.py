@@ -1,5 +1,5 @@
 from CMGTools.H2TauTau.proto.plotter.PlotConfigs import HistogramCfg,BasicHistogramCfg
-
+import numpy as np
 from ROOT import TH1F, TFile, gROOT
 
 class HistoStack:
@@ -76,10 +76,44 @@ def removeNegativeValues(histo):
     for b in xrange(histo.GetNbinsX()+2):
         if histo.GetBinContent(b)<0:
             histo.SetBinContent(b,0)
+            histo.SetBinError(b,abs(histo.GetBinContent(b)))
 
 def removeNegativeValues2D(histo):
     for bx in xrange(histo.GetNbinsX()+2):
         for by in xrange(histo.GetNbinsY()+2):
             if histo.GetBinContent(bx,by)<0:
                 histo.SetBinContent(bx,by,0)
+                histo.SetBinError(bx,by,abs(histo.GetBinContent(bx,by)))
+
+def checkFractionSums2D(histos):
+    nbinsx = histos[0].GetNbinsX()
+    nbinsy = histos[0].GetNbinsY()
+    for bx in xrange(1, nbinsx+1):
+        for by in xrange(1, nbinsy+1):
+            binsum = sum([h.GetBinContent(bx,by) for h in histos])
+            if binsum==0:
+                # Take local average fraction (from neighbour bins) for each histo
+                for histo in histos:
+                    neighbours = []
+                    for ix in [-1,0,1]:
+                        shiftx = bx+ix
+                        if shiftx<1 or shiftx>nbinsx: continue
+                        for iy in [-1,0,1]:
+                            if ix==0 and iy==0: continue
+                            shifty = by+iy
+                            if shifty<1 or shifty>nbinsy: continue
+                            neighbour = histo.GetBinContent(shiftx,shifty)
+                            neighbours.append(neighbour)
+                    mean = np.mean(neighbours) # Simple mean, errors not taken into account
+                    histo.SetBinContent(bx,by,mean)
+                    histo.SetBinError(bx,by,mean)
+                # Correct if new sum is not equal to 1
+                newsum = sum([h.GetBinContent(bx,by) for h in histos])
+                for histo in histos:
+                    content = histo.GetBinContent(bx,by)
+                    histo.SetBinContent(bx,by,content/newsum)
+                    histo.SetBinError(bx,by,content/newsum)
+            elif abs(binsum-1)>1.e-5:
+                print 'Warning: fraction sum is equal to',binsum,'in bin', bx, by
+
 
