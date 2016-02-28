@@ -142,14 +142,14 @@ for fakeType,inputs in closure_inputs.items():
 
 
     for name,bins in mt_bins.items():
-        plotClosure(fakeType+'_'+name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', doErrors=True)
+        plotClosure(fakeType+'_'+name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', doErrors=True, xTitle='m_{T} [GeV]')
 
     #for nbins in [100,50,25]:
         #cdf = closure.data['True']['CDFInvert']
         #bins = [cdf.Eval(i/float(nbins)) for i in xrange(nbins+1)]
         #plotClosure(fakeType+'_NBins'+str(nbins), closure, bins)
 
-    plotSummary(fakeType, closure, 0, 250)
+    plotSummary(fakeType, closure, 0, 250, xTitle='m_{T} [GeV]')
 
     output_file.cd()
     writeCorrectionAnderrors(closure, output_file)

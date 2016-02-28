@@ -75,12 +75,14 @@ output_file = ROOT.TFile('./results/nonClosures.root', 'RECREATE')
 #mvis_bins = xrange(0, 400, 10)
 #mvis_bins = [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 110., 120., 130., 140., 150., 160., 170., 180., 190., 200., 225., 250., 275., 300., 325., 350., 375., 400., 450., 500., 550., 600.] 
 mvis_bins = {
-    #'Standard_x2':[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,155,160,165,170,175,180,185,190,195,200,225,250,275,300,325,350,400,450,525,600],
+    'Standard_x2':[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,155,160,165,170,175,180,185,190,195,200,225,250,275,300,325,350,400,450,525,600],
     'Standard':[0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 110., 120., 130., 140., 150., 160., 170., 180., 190., 200., 225., 250., 300., 350., 450., 600.],
-    #'Standard_Div2':[0., 20., 40., 60., 80., 100., 120., 140., 160., 180., 200., 250., 350., 600.],
+    'Standard_Div2':[0., 20., 40., 60., 80., 100., 120., 140., 160., 180., 200., 250., 350., 600.],
     #'Standard_Div4':[0., 40., 80., 120., 160., 200., 350., 600.],
 }
 
+
+nominal = 'Standard'
 
 
 def setPlotStyle():
@@ -117,6 +119,16 @@ def setPlotStyle():
     ROOT.gROOT.ForceStyle()
 
 
+
+def writeNonClosure(closure, output, name):
+    histoId = str(hash(str(mvis_bins[nominal])))
+    clos = closure.data['True/Est']['Histo_{H}_Smooth'.format(H=histoId)]
+    clos.SetName(name)
+    output.cd()
+    clos.Write()
+
+
+
 setPlotStyle()
 for fakeType,inputs in closure_inputs.items():
     input_files = inputs['Files']
@@ -142,7 +154,8 @@ for fakeType,inputs in closure_inputs.items():
     plotSummary(fakeType, closure, 0, 600)
 
     #
-    #output_file.cd()
+    writeNonClosure(closure, output_file, '{FAKETYPE}_Histo_Smooth_Ratio'.format(FAKETYPE=fakeType))
+
     #canvas.Write()
     ##cdfTrue.SetName('{FAKETYPE}_CDF_True'.format(FAKETYPE=fakeType))
     ##cdfEst.SetName('{FAKETYPE}_CDF_Est'.format(FAKETYPE=fakeType))

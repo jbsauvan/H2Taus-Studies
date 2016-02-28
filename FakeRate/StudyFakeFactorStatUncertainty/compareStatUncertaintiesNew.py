@@ -38,7 +38,7 @@ for name,sys in systematics.items():
 systematicsLegends = {}
 systematicsLegends['Weight_Combined_Iso_Medium_VsPtDecay'] = 'p_{T} + decay'
 
-legendPosition = [0.2, 0.7, 0.45, 0.9]
+legendPosition = [0.2, 0.6, 0.75, 0.9]
 
 def loadHisto(fileName, histoName):
     file = ROOT.TFile.Open(fileName)
@@ -164,7 +164,7 @@ for name,sys in systematics.items():
         config1 = copy(configRawStat)
         config1.xTitle = "m_{vis} [GeV]"
         config1.yTitle = 'Relative uncertainty'
-        config1.legend = "Stat. unc."
+        config1.legend = "Stat. unc. in anti-iso"
         histo1 = errorHisto([h[0] for h in histo] ,[name+'/'+h[1] for h in histo])
         plot.addHisto(histo1, config1)
         #
@@ -177,21 +177,21 @@ for name,sys in systematics.items():
         #
         config3 = copy(configFactorStat3)
         config3.xTitle = "m_{vis} [GeV]"
-        config3.legend = "Factor unc. 50"
+        config3.legend = "Factor unc., 50 toys"
         config3.yTitle = 'Relative uncertainty'
         histo3 = fakeFactorErrorHisto([h[0] for h in histo],[h[1] for h in histo], sys[0:50])
         plot.addHisto(histo3, config3)
         #
         config4 = copy(configFactorStat2)
         config4.xTitle = "m_{vis} [GeV]"
-        config4.legend = "Factor unc. 100"
+        config4.legend = "Factor unc., 100 toys"
         config4.yTitle = 'Relative uncertainty'
         histo4 = fakeFactorErrorHisto([h[0] for h in histo],[h[1] for h in histo], sys[0:100])
         plot.addHisto(histo4, config4)
         #
         config5 = copy(configFactorStat)
         config5.xTitle = "m_{vis} [GeV]"
-        config5.legend = "Factor unc. 200"
+        config5.legend = "Factor unc., 200 toys"
         config5.yTitle = 'Relative uncertainty'
         histo5 = fakeFactorErrorHisto([h[0] for h in histo],[h[1] for h in histo], sys[0:200])
         plot.addHisto(histo5, config5)
@@ -207,7 +207,7 @@ for name,sys in systematics.items():
                     if not key.GetName() in shifts: shifts.append(key.GetName())
         config6 = copy(configFactorStatShifts)
         config6.xTitle = "m_{vis} [GeV]"
-        config6.legend = "Individual shifts"
+        config6.legend = "Factor unc., bin shifts"
         config6.yTitle = 'Relative uncertainty'
         histo6 = fakeFactorSysErrorHisto([h[0] for h in histo2],[h[1] for h in histo2], name, shifts)
         plot.addHisto(histo6, config6)
