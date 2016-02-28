@@ -34,9 +34,14 @@
 * StudyFakeRate/MuTau/AllFakeFactors
  - v_2_2016-02-08 
  - v_5_2016-02-10 
+ - v_6_2016-02-22 
 
 * StudyFakeRate/MuTau/FakeFactorUncertainties
  - v_5_2016-02-19 
+ - v_6_2016-02-25 
+
+* StudyFakeRate/MuTau/FakeFactorUncertaintiesFromToys
+ - v_1_2016-02-23 
 
 * StudyFakeRate/MuTau/QCDFakeFactorClosure 
  - v_1_2016-02-17
