@@ -5,7 +5,7 @@ from Efficiency2DPlots import Efficiency2DPlots, PlotInfo
 
 
 inputFileNames = [
-    "../../../Histos/StudyFakeRate/MuMu_MTStudy/76X/Data_Run15D/v_1_2016-03-01/fakerates_ZMuMu_MTStudy_Data_Run15D.root",
+    ["../../../Histos/StudyFakeRate/MuMu_MTStudy/76X/Data_Run15D/v_1_2016-03-01/fakerates_ZMuMu_MTStudy_Data_Run15D.root",1],
 ]
 plotDir = "plots/"
 name = "FakeFactors_Data_ZMuMu_HighMT_2D"

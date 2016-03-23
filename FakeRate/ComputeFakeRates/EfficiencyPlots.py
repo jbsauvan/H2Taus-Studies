@@ -36,6 +36,8 @@ def setPlotStyle():
     ROOT.gStyle.SetPaintTextFormat("3.2f")
     ROOT.gROOT.ForceStyle()
 
+
+
 class PlotInfo:
     def __init__(self):
         self.markerStyle = 20
@@ -44,6 +46,7 @@ class PlotInfo:
         self.legend = ""
         self.xTitle = ""
         self.yTitle = ""
+
 
 
 class EfficiencyPlot:
@@ -284,7 +287,7 @@ class EfficiencyPlots:
                     passHistoSum = None
                     totalHistoSum = None
                     inum = 0
-                    for inputFileName in inputFileNames:
+                    for inputFileName,weight in inputFileNames:
                         inputFile = ROOT.TFile.Open(inputFileName)
                         passHisto = inputFile.Get(passHistoName)
                         if not passHisto:
@@ -308,10 +311,14 @@ class EfficiencyPlots:
                         elif self.rebin>1: totalHisto.Rebin(self.rebin)
                         #
                         inputFile.Close()
-                        if not passHistoSum: passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
-                        else: passHistoSum.Add(passHisto)
-                        if not totalHistoSum: totalHistoSum = totalHisto.Clone('{0}_{1}_{2}'.format(totalHisto.GetName(), self.name, inum))
-                        else: totalHistoSum.Add(totalHisto)
+                        if not passHistoSum: 
+                            passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
+                            passHistoSum.Scale(weight)
+                        else: passHistoSum.Add(passHisto, weight)
+                        if not totalHistoSum: 
+                            totalHistoSum = totalHisto.Clone('{0}_{1}_{2}'.format(totalHisto.GetName(), self.name, inum))
+                            totalHistoSum.Scale(weight)
+                        else: totalHistoSum.Add(totalHisto, weight)
                         #
                         inum+= 1
                     #
@@ -371,7 +378,7 @@ class EfficiencyInBinsPlots:
                     passHistoSum = None
                     totalHistoSum = None
                     inum = 0
-                    for inputFileName in self.inputFileNames:
+                    for inputFileName,weight in self.inputFileNames:
                         inputFile = ROOT.TFile.Open(inputFileName)
                         passHisto = inputFile.Get(passHistoName)
                         if not passHisto:
@@ -385,13 +392,16 @@ class EfficiencyInBinsPlots:
                         totalHisto.SetDirectory(0)
                         #
                         inputFile.Close()
-                        if not passHistoSum: passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
-                        else: passHistoSum.Add(passHisto)
-                        if not totalHistoSum: totalHistoSum = totalHisto.Clone('{0}_{1}_{2}'.format(totalHisto.GetName(), self.name, inum))
-                        else: totalHistoSum.Add(totalHisto)
+                        if not passHistoSum: 
+                            passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
+                            passHistoSum.Scale(weight)
+                        else: passHistoSum.Add(passHisto, weight)
+                        if not totalHistoSum: 
+                            totalHistoSum = totalHisto.Clone('{0}_{1}_{2}'.format(totalHisto.GetName(), self.name, inum))
+                            totalHistoSum.Scale(weight)
+                        else: totalHistoSum.Add(totalHisto, weight)
                         #
                         inum+= 1
-                        inputFile.Close()
                     #
                     effPlot.efficiency(passHistoSum, totalHistoSum, self.divideOption, plotInfo)
                     effPlot.efficiencyGraphs[-1].SetName(self.name+fselectionLevel+freferenceLevel+fvar+fbin)

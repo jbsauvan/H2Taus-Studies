@@ -13,7 +13,7 @@ if publish:
         publish = False
 
 
-inputFileName = "../../../Histos/StudyFakeRate/MuMu_MTStudy/76X/Z/v_1_2016-03-01/fakerates_ZMuMu_MTStudy_Z.root"
+inputFileName = ["../../../Histos/StudyFakeRate/MuMu_MTStudy/76X/Z/v_1_2016-03-01/fakerates_ZMuMu_MTStudy_Z.root",1]
 plotDir = "plots/"
 name = "FakeFactors_ZMuMu_HighMT_1D"
 systems = []

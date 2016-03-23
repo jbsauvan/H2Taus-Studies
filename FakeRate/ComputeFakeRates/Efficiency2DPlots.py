@@ -125,7 +125,7 @@ class Efficiency2DPlots:
                 passHistoSum = None
                 totalHistoSum = None
                 inum = 0
-                for inputFileName in self.inputFileNames:
+                for inputFileName,weight in self.inputFileNames:
                     inputFile = ROOT.TFile.Open(inputFileName)
                     passHisto = inputFile.Get(passHistoName)
                     if not passHisto:
@@ -137,16 +137,20 @@ class Efficiency2DPlots:
                         raise StandardError("Cannot find histo "+totalHistoName+" in file "+inputFile.GetName())
                     totalHisto.__class__ = ROOT.TH2F
                     totalHisto.SetDirectory(0)
+                    inputFile.Close() 
                     #
-                    if not passHistoSum: passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
-                    else: passHistoSum.Add(passHisto)
-                    if not totalHistoSum: totalHistoSum = totalHisto.Clone('{0}_{1}_{2}'.format(totalHisto.GetName(), self.name, inum))
-                    else: totalHistoSum.Add(totalHisto)
+                    if not passHistoSum: 
+                        passHistoSum = passHisto.Clone('{0}_{1}_{2}'.format(passHisto.GetName(), self.name, inum))
+                        passHistoSum.Scale(weight)
+                    else: passHistoSum.Add(passHisto,weight)
+                    if not totalHistoSum: 
+                        totalHistoSum = totalHisto.Clone('{0}_{1}_{2}'.format(totalHisto.GetName(), self.name, inum))
+                        totalHistoSum.Scale(weight)
+                    else: totalHistoSum.Add(totalHisto,weight)
                     #
                     inum+= 1
-                    inputFile.Close() 
                 #
-                effPlot.addEfficiency(passHisto, totalHisto, self.plotInfo)
+                effPlot.addEfficiency(passHistoSum, totalHistoSum, self.plotInfo)
                 effPlot.efficiency.SetName(self.name+fselectionLevel+freferenceLevel+fvar)
                 effPlot.plot(minEff,maxEff)
                 self.plots.append(effPlot)

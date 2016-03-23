@@ -4,7 +4,7 @@ from Efficiency2DPlots import Efficiency2DPlots, PlotInfo
 
 
 
-inputFileName = "../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/QCD/v_3_2016-02-17/fakerates_MuTau_QCDSS_QCD.root"
+inputFileName = ["../../../Histos/StudyFakeRate/MuTau_FakeRate_QCDSS/QCD/v_3_2016-02-17/fakerates_MuTau_QCDSS_QCD.root",1]
 plotDir = "plots/"
 name = "FakeFactors_QCDSS_2D"
 

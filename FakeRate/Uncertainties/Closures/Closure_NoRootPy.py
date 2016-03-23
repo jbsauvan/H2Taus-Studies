@@ -1,10 +1,6 @@
 import ROOT
-import Density
 from array import array
 import numpy as np
-from root_numpy import root2array
-from rootpy.plotting import Hist, Canvas
-import rootpy
 import math
 import copy
 
@@ -69,8 +65,9 @@ def createSmoothingWeightsFromErrors(histo):
             weight = 1./(histo.GetBinError(b)**2)
         weights.append(weight)
     sumWeights = sum(weights)
+    if sumWeights==0.: print 'Warning: sum of weights = 0'
     for b in range(1,histo.GetNbinsX()+1):
-        histoWeights.SetBinContent(b,weights[b-1]/sumWeights)
+        histoWeights.SetBinContent(b,weights[b-1]/sumWeights if sumWeights>0. else 1.)
         histoWeights.SetBinError(b,0.)
     return histoWeights
 
@@ -182,32 +179,61 @@ class Closure:
         self.weights = False
         self.data = {}
 
-
-    def fillData(self, name, input_files, tree, var, weight=None, global_weights=None):
-        all_points = None
+    def fillData(self, name, input_files, tree_name, var, selection='', weight=None, global_weights=None, fakefactor=None, ffInputs=[]):
+        values = []
+        weights = []
+        ## Read each tree
         for input_file,global_weight in zip(input_files,global_weights):
-            branches = [var] 
-            total_weight = copy.copy(weight) if weight else '1'
-            if global_weight!=1:
-                total_weight += '*{}'.format(global_weight)
-            if total_weight!=1:
-                branches.append(total_weight)
-                self.weights = True
-            data = root2array(input_file, tree, branches=branches)
-            points = data.view((np.float64, len(data.dtype.names)))
-            if all_points==None: all_points = points
-            else: all_points = np.vstack((all_points, points))
-        values = all_points[:,0] if self.weights else points
-        weights = all_points[:,1] if self.weights else None
+            print input_file, global_weight
+            file = ROOT.TFile.Open(input_file)
+            tree = file.Get(tree_name)
+            ## Apply cuts to read entries
+            tree.SetBranchStatus("*", True)
+            tree.Draw(">>elist", selection, "entrylist")
+            entry_list = ROOT.gDirectory.Get("elist")
+            entry_list.__class__ = ROOT.TEntryList
+            entries = entry_list.GetN()
+            tree.SetEntryList(entry_list) 
+            ## Read only needed variables
+            tree.SetBranchStatus("*", False)
+            variable_list = [var]
+            if weight: variable_list.append(weight)
+            if fakefactor: variable_list.extend(ffInputs)
+            for v in variable_list:
+                tree.SetBranchStatus(v, True)
+            ## Define TTreeFormulas
+            formula_value = ROOT.TTreeFormula(var,var,tree)
+            formula_weight = ROOT.TTreeFormula(weight,weight,tree) if weight else None
+            formula_inputs = []
+            for inp in ffInputs:
+                formula_inputs.append(ROOT.TTreeFormula(inp,inp,tree))
+            ## Initialize data
+            for entry in xrange(entries):
+                if entry%10000==0: print 'Entry {0}/{1}'.format(entry,entries)
+                tree_entry = entry_list.GetEntry(entry)
+                tree.GetEntry(tree_entry)
+                # Read value
+                formula_value.GetNdata()
+                value = formula_value.EvalInstance()
+                # Compute weight
+                total_weight = global_weight
+                if formula_weight:
+                    formula_weight.GetNdata()
+                    total_weight *= formula_weight.EvalInstance()
+                # Apply fake factor
+                inputs = []
+                for finp in formula_inputs:
+                    finp.GetNdata()
+                    inputs.append(finp.EvalInstance())
+                if fakefactor:
+                    total_weight *= fakefactor.value(len(inputs),array('d',inputs))
+                values.append(value)
+                weights.append(total_weight)
+            entry_list.Delete()
+            file.Close()
         if not name in self.data: self.data[name] = {}
-        self.data[name]['Data'] = [values, weights]
+        self.data[name]['Data'] = [np.array(values), np.array(weights)]
 
-    def clearData(self, name=None):
-        if name:
-            self.data[name]['Data'] = None
-        else:
-            for data in self.data.values():
-                data['Data'] = None
 
 
     def computeTKDE(self, name, min=1., max=0.):
@@ -241,9 +267,14 @@ class Closure:
             raise StandardError('Cannot find data for {NAME}'.format(NAME=name))
         values = self.data[name]['Data'][0]
         weights = self.data[name]['Data'][1]
-        histo = Hist(bins, type='F')
+        histo = ROOT.TH1F('Histo_'+str(hash(str(bins)))+'_'+name, name, len(bins)-1, array('f',bins))
         histo.Sumw2()
-        histo.fill_array(values, weights=weights)
+        for value,weight in zip(values,weights):
+            histo.Fill(value,weight)
+        for b in xrange(1,histo.GetNbinsX()+1):
+            if histo.GetBinContent(b)<0:
+                histo.SetBinContent(b,0)
+                histo.SetBinError(b,0)
         histo.Scale(1,'width')
         #self.data[name]['Histo'] = histo
         self.data[name]['Histo_'+str(hash(str(bins)))] = histo
@@ -271,7 +302,8 @@ class Closure:
         elif isinstance(self.data[name1][type], ROOT.TH1F):
             histo1 = self.data[name1][type]
             histo2 = self.data[name2][type]
-            histodiff = histo2 - histo1
+            histodiff = histo2.Clone(histo2.GetName()+'_diff')
+            histodiff = histo2.Add(histo1, -1.)
             if not'{1}-{0}'.format(name1,name2) in self.data: self.data['{1}-{0}'.format(name1,name2)] = {}
             self.data['{1}-{0}'.format(name1,name2)][type] = histodiff
             ## Smooth diff histo
@@ -312,7 +344,8 @@ class Closure:
         elif isinstance(self.data[name1][type], ROOT.TH1F):
             histo1 = self.data[name1][type]
             histo2 = self.data[name2][type]
-            historatio = histo2 / histo1
+            historatio = histo2.Clone(histo2.GetName()+'_ratio') 
+            historatio.Divide(histo1)
             if not'{1}/{0}'.format(name1,name2) in self.data: self.data['{1}/{0}'.format(name1,name2)] = {}
             self.data['{1}/{0}'.format(name1,name2)][type] = historatio
             ## Smooth ratio histo
@@ -339,7 +372,7 @@ class Closure:
 
 
 
-def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', doErrors=False, xTitle='m_{vis} [GeV]'):
+def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', doErrors=False, yRange=None, xTitle='m_{vis} [GeV]'):
     binid = hash(str(bins))
     closure.computeHisto('True', bins)
     closure.computeHisto('Est', bins)
@@ -352,7 +385,7 @@ def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', do
     histoSmoothRatioError = closure.data['True/Est']['Histo_{H}_SmoothError'.format(H=binid)]
     #
     ############ plot raw distributions
-    histoDummy = Hist(1, bins[0],  bins[-1], type='F')
+    histoDummy = ROOT.TH1F('hDummy', 'hDummy', 1, bins[0],  bins[-1])
     values = []
     values.append(histoTrue.GetMaximum())
     values.append(histoTrue.GetMinimum())
@@ -366,7 +399,7 @@ def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', do
     histoEst.SetMarkerStyle(24)
     histoEst.SetMarkerColor(ROOT.kGray+3)
     ##
-    canvas = Canvas(800, 800)
+    canvas = ROOT.TCanvas('canvas', 'canvas', 800, 800)
     canvas.SetName('{NAME}_Canvas'.format(NAME=name))
     histoDummy.SetXTitle(xTitle)
     histoDummy.SetYTitle('Events')
@@ -379,11 +412,11 @@ def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', do
     legend.AddEntry(histoTrue, 'True background', 'lp')
     legend.AddEntry(histoEst, 'Estimated background', 'lp')
     legend.Draw()
-    canvas.Print('results/{NAME}_NonClosure.png'.format(NAME=name))
+    canvas.Print('results_New/{NAME}_NonClosure.png'.format(NAME=name))
 
 
     ################ Plot ratios
-    histoDummyRatio = Hist(1, bins[0],  bins[-1], type='F')
+    histoDummyRatio = ROOT.TH1F('hDummyRatio', 'hDummy', 1, bins[0],  bins[-1])
     values = []
     values.append(histoRatio.GetMaximum())
     values.append(histoRatio.GetMinimum())
@@ -391,7 +424,10 @@ def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', do
     mini = min(values)
     maxi = maxi*1.1 if maxi>0 else maxi*0.9
     mini = mini*1.1 if mini<0 else mini*0.9
-    histoDummyRatio.SetAxisRange(mini, maxi, 'Y')
+    if not yRange:
+        histoDummyRatio.SetAxisRange(mini, maxi, 'Y')
+    else:
+        histoDummyRatio.SetAxisRange(yRange[0], yRange[1], 'Y')
     ##
     histoRatio.SetMarkerColor(ROOT.kBlack)
     histoSmoothRatio.SetLineColor(ROOT.kGray+3)
@@ -399,7 +435,7 @@ def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', do
     histoSmoothRatioError.SetLineColor(ROOT.kGray+1)
     histoSmoothRatioError.SetFillColor(ROOT.kGray+1)
     ##
-    canvasRatio = Canvas(800, 800)
+    canvasRatio = ROOT.TCanvas('canvasRatio', 'canvas', 800, 800)
     canvasRatio.SetName('{NAME}_Ratio_Canvas'.format(NAME=name))
     histoDummyRatio.SetXTitle(xTitle)
     histoDummyRatio.SetYTitle('Ratio')
@@ -407,7 +443,7 @@ def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', do
     histoSmoothRatioError.Draw('fl same')
     histoSmoothRatio.Draw('pl same')
     histoRatio.Draw('same')
-    canvasRatio.Print('results/{NAME}_NonClosure_Ratio.png'.format(NAME=name))
+    canvasRatio.Print('results_New/{NAME}_NonClosure_Ratio.png'.format(NAME=name))
 
 def plotSummary(name, closure, xmin=0, xmax=1, xTitle='m_{vis} [GeV]'):
     histoSmoothRatios = []
@@ -415,7 +451,7 @@ def plotSummary(name, closure, xmin=0, xmax=1, xTitle='m_{vis} [GeV]'):
         if 'Histo' in hname and 'Smooth' in hname and not 'Error' in hname:
             histoSmoothRatios.append(graph)
     ################ Plot ratios
-    histoDummyRatio = Hist(1, xmin,  xmax, type='F')
+    histoDummyRatio = ROOT.TH1F('hDummyRatio', 'hDummyRatio', 1, xmin,  xmax)
     values = []
     for ratio in histoSmoothRatios:
         for p in xrange(ratio.GetN()):
@@ -430,7 +466,7 @@ def plotSummary(name, closure, xmin=0, xmax=1, xTitle='m_{vis} [GeV]'):
         ratio.SetLineColor(ROOT.kGray+3)
         ratio.SetLineWidth(1)
     ##
-    canvasRatio = Canvas(800, 800)
+    canvasRatio = ROOT.TCanvas('canvasRatio', 'canvas', 800, 800)
     canvasRatio.SetName('Ratio_Summary_Canvas')
     histoDummyRatio.SetXTitle(xTitle)
     histoDummyRatio.SetYTitle('Ratio')

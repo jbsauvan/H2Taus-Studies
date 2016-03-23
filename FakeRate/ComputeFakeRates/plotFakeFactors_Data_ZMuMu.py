@@ -14,8 +14,8 @@ if publish:
 
 
 inputFileNames = [
-    "../../../Histos/StudyFakeRate/MuMu/Data_Run15D_05Oct/v_2_2016-01-28/fakerates_ZMuMu_Data_Run15D_05Oct.root",
-    "../../../Histos/StudyFakeRate/MuMu/Data_Run15D_v4/v_2_2016-01-28/fakerates_ZMuMu_Data_Run15D_v4.root",
+    ["../../../Histos/StudyFakeRate/MuMu/Data_Run15D_05Oct/v_2_2016-01-28/fakerates_ZMuMu_Data_Run15D_05Oct.root",1],
+    ["../../../Histos/StudyFakeRate/MuMu/Data_Run15D_v4/v_2_2016-01-28/fakerates_ZMuMu_Data_Run15D_v4.root",1],
 
 ]
 plotDir = "plots/"

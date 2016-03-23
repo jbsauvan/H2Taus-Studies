@@ -16,7 +16,7 @@ publicationDir = ""
 
 
 #inputFileName = "../../../Histos/StudyFakeRate/MuTau_WJets/W/v_5_2016-01-28/fakerates_MuTau_WJets_W.root"
-inputFileName = "../../../Histos/StudyFakeRate/MuTau_WJets/W/v_4_2016-01-15/fakerates_MuTau_WJets_W.root"
+inputFileName = ["../../../Histos/StudyFakeRate/MuTau_WJets/W/v_4_2016-01-15/fakerates_MuTau_WJets_W.root",1]
 plotDir = "plots/"
 name = "FakeFactors_WJets"
 systems = []

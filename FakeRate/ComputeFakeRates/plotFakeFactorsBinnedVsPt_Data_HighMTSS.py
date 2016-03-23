@@ -4,8 +4,8 @@ from EfficiencyPlots import EfficiencyInBinsPlots, PlotInfo
 
 
 inputFileNames = [
-    "../../../Histos/StudyFakeRate/MuTau_FakeRateWJetsHighMT/Data_Run15D_v4/v_4_2016-03-02/fakerates_MuTau_WJetsHighMT_Data_Run15D_v4.root",
-    "../../../Histos/StudyFakeRate/MuTau_FakeRateWJetsHighMT/Data_Run15D_05Oct/v_4_2016-03-02/fakerates_MuTau_WJetsHighMT_Data_Run15D_05Oct.root",
+    ["../../../Histos/StudyFakeRate/MuTau_FakeRateWJetsHighMT/Data_Run15D_v4/v_4_2016-03-02/fakerates_MuTau_WJetsHighMT_Data_Run15D_v4.root",1],
+    ["../../../Histos/StudyFakeRate/MuTau_FakeRateWJetsHighMT/Data_Run15D_05Oct/v_4_2016-03-02/fakerates_MuTau_WJetsHighMT_Data_Run15D_05Oct.root",1],
 ]
 plotDir = "plots/"
 name = "FakeFactors_Data_HighMTSS_Binned"

@@ -14,7 +14,7 @@ publicationDir = ""
         #publish = False
 
 
-inputFileName = "../../../Histos/StudyFakeRate/MuMu_MTStudy/Z/v_4_2016-02-02/fakerates_ZMuMu_MTStudy_Z.root"
+inputFileName = ["../../../Histos/StudyFakeRate/MuMu_MTStudy/Z/v_4_2016-02-02/fakerates_ZMuMu_MTStudy_Z.root",1]
 plotDir = "plots/FakeFactors_ZMuMu_MT/"
 
 muon2PtCuts = [6,7,8,9,10,12,14,16,18,20]
