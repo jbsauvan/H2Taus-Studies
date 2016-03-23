@@ -12,6 +12,9 @@
  - v_1_2016-01-27 
  - v_4_2016-02-02
 
+* StudyFakeRate/MuMu_MTStudy/76X/  
+ - v_1_2016-03-01 
+
 * StudyFakeRate/MuTau/ 
  - v_5_2015-11-25 
  - v_6_2015-11-30
@@ -39,6 +42,10 @@
 * StudyFakeRate/MuTau/FakeFactorUncertainties
  - v_5_2016-02-19 
  - v_6_2016-02-25 
+ - v_8_2016-03-01 
+
+* StudyFakeRate/MuTau/FakeFactorUncertainties_SS
+ - v_2_2016-03-04 
 
 * StudyFakeRate/MuTau/FakeFactorUncertaintiesFromToys
  - v_1_2016-02-23 
@@ -59,13 +66,24 @@
  - v_1_2016-01-21
  - v_2_2016-01-28
  - v_3_2016-01-29
+ - v_4_2016-03-02 
 
 * StudyFakeRate/MuTau_FakeRate_QCDSS 
  - v_2_2016-01-28
  - v_3_2016-02-17
+ *** Replaced by StudyFakeRate/MuTau_FakeRate_QCD ***
+
+* StudyFakeRate/MuTau_FakeRate_QCD
+ - v_1_2016-03-18 
 
 * StudyFakeRate/MuTau_Signal/
  - v_1_2016-02-08 
+
+* StudyFakeRate/MuTau/NonClosure 
+ - v_1_2016-03-01 
+
+* StudyFakeRate/MuTau/NonClosureSS 
+ - v_1_2016-03-03 
 
 * TauPolarization/Background/ 
  - v_3_2015-12-16
