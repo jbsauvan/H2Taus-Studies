@@ -9,11 +9,9 @@ mc_info = pickle.load(open('mc_info.pck', 'rb'))
 int_lumi = 2094.2
 
 ff_ss = ROOT.MakeNullPointer( "FakeFactor" ) 
-ff_os = ROOT.MakeNullPointer( "FakeFactor" ) 
 
-ff_file = ROOT.TFile.Open('/afs/cern.ch/user/j/jsauvan/workspace/Projects/Htautau_Run2/CMSSW/CMSSW_7_6_3/src/HTTutilities/Jet2TauFakes/test/fakeFactor_QCDOSSS15.root')
-ff_file.GetObject('ff_qcd_ss_corr_iso', ff_ss)
-ff_file.GetObject('ff_qcd_os_corr_iso', ff_os)
+ff_file = ROOT.TFile.Open('/afs/cern.ch/user/j/jsauvan/workspace/Projects/Htautau_Run2/CMSSW/CMSSW_7_6_3/src/HTTutilities/Jet2TauFakes/test/fakeFactor_QCDOSSS.root')
+ff_file.GetObject('ff_qcd_ss_mumedium_corr', ff_ss)
 
 cuts = ["l1_muonid_medium>0.5","l1_pt>19"]
 cuts.extend(["l2_againstMuon3>1.5","l2_againstElectronMVA5>0.5"])
@@ -35,7 +33,9 @@ cut_mumediumiso3 = ['l1_reliso05>0.01', 'l1_reliso05<0.15']
 cut_tauiso = ['l2_byCombinedIsolationDeltaBetaCorr3Hits >= 2']
 cut_tauantiiso = ['l2_byCombinedIsolationDeltaBetaCorr3Hits < 2']
 
-files = [
+cut_mvis_sidebands = ['(mvis<45 || mvis>95)']
+
+files_data = [
             # Data
             '/afs/cern.ch/user/j/jsauvan/workspace/public/HTauTau/Trees/mt/151215/SingleMuon_Run2015D_05Oct/H2TauTauTreeProducerTauMu/tree.root',
             '/afs/cern.ch/user/j/jsauvan/workspace/public/HTauTau/Trees/mt/151215/SingleMuon_Run2015D_v4/H2TauTauTreeProducerTauMu/tree.root',
@@ -54,7 +54,7 @@ files = [
             '/afs/cern.ch/user/j/jsauvan/workspace/public/HTauTau/Trees/mt/151215/WWTo1L1Nu2Q/H2TauTauTreeProducerTauMu/tree.root',
         ]
 
-weights = [
+weights_data = [
             # Data
             1,1,
             # Subtract contamination
@@ -72,136 +72,25 @@ weights = [
             -int_lumi*mc_info['WWTo1L1Nu2Q']['XSec']/mc_info['WWTo1L1Nu2Q']['SumWeights'],
         ]
 
+files_mc = [
+            # QCD
+            '/afs/cern.ch/user/j/jsauvan/workspace/public/HTauTau/Trees/mt/151215/QCD_Mu15/H2TauTauTreeProducerTauMu/tree.root',
+        ]
+
+weights_mc = [
+            int_lumi*mc_info['QCD']['XSec']/mc_info['QCD']['SumWeights'],
+        ]
+
 closure_inputs = {
-    ## SS fake factors
-    'FFSS_QCD_SS_MuAntiIso':{
-        'Files':files,
-        'Weights':weights,
+    ## Data
+    # SS fake factors
+    'FFSS_QCD_SS_Data':{
+        'Files':files_data,
+        'Weights':weights_data,
         'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_muantiiso+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_muantiiso+cut_tauantiiso,
+        'CutsIso':cuts+cut_ss+cut_tauiso,
+        'CutsAntiIso':cuts+cut_ss+cut_tauantiiso,
         'FakeFactor':ff_ss,
-    },
-    'FFSS_QCD_SS_MuIso':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_muiso+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_muiso+cut_tauantiiso,
-        'FakeFactor':ff_ss,
-    },
-    'FFSS_QCD_SS_MuMediumIso10':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_mumediumiso1+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_mumediumiso1+cut_tauantiiso,
-        'FakeFactor':ff_ss,
-    },
-    'FFSS_QCD_SS_MuMediumIso05':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_mumediumiso2+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_mumediumiso2+cut_tauantiiso,
-        'FakeFactor':ff_ss,
-    },
-    'FFSS_QCD_SS_MuMediumIso01':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_mumediumiso3+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_mumediumiso3+cut_tauantiiso,
-        'FakeFactor':ff_ss,
-    },
-    'FFSS_QCD_OS_MuAntiIso':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_os+cut_muantiiso+cut_tauiso,
-        'CutsAntiIso':cuts+cut_os+cut_muantiiso+cut_tauantiiso,
-        'FakeFactor':ff_ss,
-    },
-    'FFSS_QCD_OS_MuMediumIso10':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_os+cut_mumediumiso1+cut_tauiso,
-        'CutsAntiIso':cuts+cut_os+cut_mumediumiso1+cut_tauantiiso,
-        'FakeFactor':ff_ss,
-    },
-    'FFSS_QCD_OS_MuMediumIso05':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_os+cut_mumediumiso2+cut_tauiso,
-        'CutsAntiIso':cuts+cut_os+cut_mumediumiso2+cut_tauantiiso,
-        'FakeFactor':ff_ss,
-    },
-    ## OS fake factors
-    'FFOS_QCD_SS_MuAntiIso':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_muantiiso+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_muantiiso+cut_tauantiiso,
-        'FakeFactor':ff_os,
-    },
-    'FFOS_QCD_SS_MuIso':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_muiso+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_muiso+cut_tauantiiso,
-        'FakeFactor':ff_os,
-    },
-    'FFOS_QCD_SS_MuMediumIso10':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_mumediumiso1+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_mumediumiso1+cut_tauantiiso,
-        'FakeFactor':ff_os,
-    },
-    'FFOS_QCD_SS_MuMediumIso05':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_mumediumiso2+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_mumediumiso2+cut_tauantiiso,
-        'FakeFactor':ff_os,
-    },
-    'FFOS_QCD_SS_MuMediumIso01':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_ss+cut_mumediumiso3+cut_tauiso,
-        'CutsAntiIso':cuts+cut_ss+cut_mumediumiso3+cut_tauantiiso,
-        'FakeFactor':ff_os,
-    },
-    'FFOS_QCD_OS_MuAntiIso':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_os+cut_muantiiso+cut_tauiso,
-        'CutsAntiIso':cuts+cut_os+cut_muantiiso+cut_tauantiiso,
-        'FakeFactor':ff_os,
-    },
-    'FFOS_QCD_OS_MuMediumIso10':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_os+cut_mumediumiso1+cut_tauiso,
-        'CutsAntiIso':cuts+cut_os+cut_mumediumiso1+cut_tauantiiso,
-        'FakeFactor':ff_os,
-    },
-    'FFOS_QCD_OS_MuMediumIso05':{
-        'Files':files,
-        'Weights':weights,
-        'Tree':'tree',
-        'CutsIso':cuts+cut_os+cut_mumediumiso2+cut_tauiso,
-        'CutsAntiIso':cuts+cut_os+cut_mumediumiso2+cut_tauantiiso,
-        'FakeFactor':ff_os,
     },
 }
 
@@ -216,16 +105,12 @@ def toString(cuts):
     return string
 
 
+plotDir = 'results_qcd_mediumiso_vs_muoniso'
 output_data = []
-output_file = ROOT.TFile('./results_New/nonClosures.root', 'RECREATE')
+output_file = ROOT.TFile(plotDir+'/nonClosures.root', 'RECREATE')
 
-#mvis_bins = xrange(0, 400, 10)
-#mvis_bins = [0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 110., 120., 130., 140., 150., 160., 170., 180., 190., 200., 225., 250., 275., 300., 325., 350., 375., 400., 450., 500., 550., 600.] 
 var_bins = {
-    #'Standard_x2':[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,155,160,165,170,175,180,185,190,195,200,225,250,275,300,325,350,400,450],
-    'Standard':[0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 110., 120., 130., 140., 150., 160., 170., 180., 190., 200., 225., 250., 300., 350., 450.],
-    #'Standard_Div2':[0., 20., 40., 60., 80., 100., 120., 140., 160., 180., 200., 250., 450.],
-    #'Standard_Div4':[0., 40., 80., 120., 160., 200., 350., 600.],
+    'Standard':[0.,0.05,0.1,0.15,0.2, 0.25, 0.3, 0.4, 0.5, 0.7],
 }
 
 
@@ -271,8 +156,11 @@ def writeNonClosure(closure, output, name):
     histoId = str(hash(str(var_bins[nominal])))
     clos = closure.data['True/Est']['Histo_{H}_Smooth'.format(H=histoId)]
     clos.SetName(name)
+    closh = closure.data['True/Est']['Histo_{H}'.format(H=histoId)]
+    closh.SetName(name+'_histo')
     output.cd()
     clos.Write()
+    closh.Write()
 
 
 
@@ -286,14 +174,15 @@ for fakeType,inputs in closure_inputs.items():
     cuts_est = inputs['CutsAntiIso']
 
     closure = Closure()
-    closure.fillData('True', input_files, tree, 'mvis', toString(cuts_true), 'weight', global_weights)
-    closure.fillData('Est', input_files, tree, 'mvis', toString(cuts_est), 'weight', global_weights, fakefactor=fakefactor, ffInputs=['l2_pt', 'l2_decayMode', 'mvis', 'l1_reliso05'])
+    closure.fillData('True', input_files, tree, 'l1_reliso05', toString(cuts_true), 'weight', global_weights)
+    closure.fillData('Est', input_files, tree, 'l1_reliso05', toString(cuts_est), 'weight', global_weights, fakefactor=fakefactor, ffInputs=['l2_pt', 'l2_decayMode', 'mvis'])
+
 
     closure.computeCDF('True')
     closure.computeCDF('Est')
 
     for name,bins in var_bins.items():
-        plotClosure(fakeType+'_'+name, closure, bins, doErrors=False, yRange=[0.5,2.])
+        plotClosure(fakeType+'_'+name, closure, bins, doErrors=False, yRange=[0.5,2.], plotDir=plotDir, xTitle='iso(#mu)')
 
     #for nbins in [100,50,25]:
         #cdf = closure.data['True']['CDFInvert']

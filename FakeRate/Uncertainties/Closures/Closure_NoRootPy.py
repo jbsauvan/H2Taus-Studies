@@ -372,7 +372,7 @@ class Closure:
 
 
 
-def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', doErrors=False, yRange=None, xTitle='m_{vis} [GeV]'):
+def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', doErrors=False, yRange=None, xTitle='m_{vis} [GeV]', plotDir='results_New/'):
     binid = hash(str(bins))
     closure.computeHisto('True', bins)
     closure.computeHisto('Est', bins)
@@ -412,7 +412,7 @@ def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', do
     legend.AddEntry(histoTrue, 'True background', 'lp')
     legend.AddEntry(histoEst, 'Estimated background', 'lp')
     legend.Draw()
-    canvas.Print('results_New/{NAME}_NonClosure.png'.format(NAME=name))
+    canvas.Print('{DIR}/{NAME}_NonClosure.png'.format(DIR=plotDir, NAME=name))
 
 
     ################ Plot ratios
@@ -443,9 +443,9 @@ def plotClosure(name, closure, bins, smoothWidth=0.1, kernelDistance='Adapt', do
     histoSmoothRatioError.Draw('fl same')
     histoSmoothRatio.Draw('pl same')
     histoRatio.Draw('same')
-    canvasRatio.Print('results_New/{NAME}_NonClosure_Ratio.png'.format(NAME=name))
+    canvasRatio.Print('{DIR}/{NAME}_NonClosure_Ratio.png'.format(DIR=plotDir,NAME=name))
 
-def plotSummary(name, closure, xmin=0, xmax=1, xTitle='m_{vis} [GeV]'):
+def plotSummary(name, closure, xmin=0, xmax=1, xTitle='m_{vis} [GeV]', plotDir='results/'):
     histoSmoothRatios = []
     for hname,graph in closure.data['True/Est'].items():
         if 'Histo' in hname and 'Smooth' in hname and not 'Error' in hname:
@@ -473,5 +473,5 @@ def plotSummary(name, closure, xmin=0, xmax=1, xTitle='m_{vis} [GeV]'):
     histoDummyRatio.Draw()
     for ratio in histoSmoothRatios:
         ratio.Draw('l same')
-    canvasRatio.Print('results/{NAME}_NonClosure_Ratio_Summary.png'.format(NAME=name))
+    canvasRatio.Print('{DIR}/{NAME}_NonClosure_Ratio_Summary.png'.format(DIR=plotDir,NAME=name))
 
